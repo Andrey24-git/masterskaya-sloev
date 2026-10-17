@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Мастерская слоёв</title>
+<style>
+:root{--bg:#eef2f6;--bg2:#ffffff;--bg3:#f5f7fa;--ink:#14202c;--muted:#5d6b78;--line:#dce3ea;--accent:#d6246e;--accent2:#fde4ef;--on:#ffffff;--ok:#1d7a45;--okbg:#e0f4e8;--warn:#94560a;--warnbg:#fdf0d6;--grid:#e2e8ee;--shadow:0 1px 2px rgba(10,20,30,.05),0 6px 18px rgba(10,20,30,.06)}
+:root[data-theme="dark"]{--bg:#0d131a;--bg2:#161f29;--bg3:#1c2733;--ink:#e8eef4;--muted:#93a3b2;--line:#273441;--accent:#ff5ca3;--accent2:#3b1a2b;--on:#1a0911;--ok:#62d293;--okbg:#14301f;--warn:#f1b660;--warnbg:#35290f;--grid:#151e28;--shadow:none;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131a;--bg2:#161f29;--bg3:#1c2733;--ink:#e8eef4;--muted:#93a3b2;--line:#273441;--accent:#ff5ca3;--accent2:#3b1a2b;--on:#1a0911;--ok:#62d293;--okbg:#14301f;--warn:#f1b660;--warnbg:#35290f;--grid:#151e28;--shadow:none;color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));-webkit-tap-highlight-color:transparent}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{font-size:16px}
+button{cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding:0 14px}
+.top{position:sticky;top:0;z-index:20;background:var(--bg2);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.top .wrap{display:flex;align-items:center;gap:10px;height:54px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:-.01em;margin-right:auto;min-width:0}
+.logo i{width:28px;height:28px;border-radius:8px;flex:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.35) 0 2px,transparent 2px 5px),var(--accent)}
+.logo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{position:relative;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);display:grid;place-items:center;padding:0}
+.iconbtn .cnt{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--on);font-size:11px;font-weight:800;display:grid;place-items:center}
+.demo{background:var(--warnbg);color:var(--warn);font-size:13px;padding:7px 14px;text-align:center}
+.hero{position:relative;overflow:hidden;border-radius:18px;padding:20px 16px 18px;margin:12px 0 14px;background:linear-gradient(135deg,var(--accent2),var(--bg2) 70%);border:1px solid var(--line)}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 6px,rgba(128,128,128,.09) 6px 7px)}
+.hero>*{position:relative;z-index:1}
+.hero h1{margin:0 0 6px;font-size:24px;line-height:1.15;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stats span{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600}
+h2.sec{font-size:18px;margin:22px 0 10px;letter-spacing:-.01em}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.pad{padding:14px}
+.search{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:0 12px;height:46px}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none;height:100%}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--bg2);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg2);border-color:var(--ink)}
+.toolbar{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
+.toolbar select{margin-left:auto}
+select,.input,textarea{border:1px solid var(--line);background:var(--bg3);border-radius:12px;padding:10px 12px;width:100%}
+.toolbar select{width:auto;padding:8px 10px;font-size:14px}
+textarea{min-height:84px;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--bg3);border-radius:12px;padding:10px 14px;font-weight:700;text-decoration:none;color:var(--ink);font-size:15px;min-height:44px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.btn.sm{min-height:34px;padding:6px 11px;font-size:13px;border-radius:10px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:active{transform:translateY(1px)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:620px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.prod{position:relative;overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+.ph{position:relative}
+.ph img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--bg3)}
+.tile{aspect-ratio:4/3;display:grid;place-items:center;font-size:48px;background:repeating-linear-gradient(0deg,rgba(255,255,255,.17) 0 2px,transparent 2px 7px),linear-gradient(135deg,hsl(var(--h) 70% 60%),hsl(var(--h) 64% 33%))}
+.tile span{filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.fav{position:absolute;top:7px;right:7px;width:34px;height:34px;border-radius:50%;border:0;background:var(--bg2);display:grid;place-items:center;padding:0;font-size:17px;line-height:1}
+.pb{padding:10px 11px 11px;display:flex;flex-direction:column;gap:3px;flex:1}
+.ptype{font-size:12px;font-weight:700;color:var(--accent)}
+.pt{font-weight:700;line-height:1.25;font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pm{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.pr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:8px}
+.price{font-weight:800;font-size:16px;white-space:nowrap}
+.price small{font-weight:500;font-size:12px;color:var(--muted)}
+.ico{display:inline-block;vertical-align:-3px}
+.bdg{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-ver{background:var(--accent2);color:var(--accent)}
+.b-rel{background:var(--okbg);color:var(--ok)}
+.b-top{background:var(--warnbg);color:var(--warn)}
+.b-new{border:1px dashed var(--line);color:var(--muted)}
+.promo{position:absolute;left:7px;top:7px;background:rgba(10,16,24,.72);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px}
+.plan{padding:14px;margin-bottom:10px}
+.plan .big{font-size:22px}
+.plan ul{margin:8px 0 10px;padding-left:18px;font-size:14px}
+.plan.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:34px 10px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv b{text-align:right}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field>span{font-size:13px;font-weight:600;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:6px 0 12px}
+.check input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:var(--accent)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar .wrap{display:flex;padding:0 4px}
+.tabbar button{flex:1;border:0;background:none;padding:8px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted);min-height:58px}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+dialog{border:0;padding:0;background:var(--bg2);color:var(--ink);max-width:640px;width:100%}
+dialog::backdrop{background:rgba(6,10,16,.55)}
+dialog.sheet{margin:auto auto 0;border-radius:20px 20px 0 0;max-height:92vh}
+@media(min-width:700px){dialog.sheet{margin:auto;border-radius:20px}}
+.shin{max-height:92vh;overflow:auto;padding:8px 16px calc(18px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain}
+.grip{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
+.shhead{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.shhead h2{margin:0;font-size:20px;line-height:1.2;flex:1}
+.x{width:34px;height:34px;border-radius:50%;border:0;background:var(--bg3);flex:none;font-size:18px;line-height:1;padding:0}
+.big{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.mrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.ava{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;background:var(--accent);color:var(--on);overflow:hidden}
+.ava img{width:100%;height:100%;object-fit:cover}
+.mini{width:52px;height:52px;border-radius:12px;flex:none;overflow:hidden;font-size:24px}
+.mini.tile{aspect-ratio:auto}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--bg3);padding:0;font-weight:800}
+.steps{display:flex;gap:4px;margin:10px 0 6px}
+.steps i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.crit{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:6px 0}
+.crit b{font-weight:600}
+.dot{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:900;margin-top:1px}
+.dot.y{background:var(--okbg);color:var(--ok)}
+.dot.n{border:1.5px solid var(--line)}
+.bar{height:8px;border-radius:4px;background:var(--bg3);overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+pre.msg{white-space:pre-wrap;background:var(--bg3);border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-height:36vh;overflow:auto;margin:10px 0}
+.seg{display:flex;background:var(--bg3);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;overflow-x:auto}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 6px;font-weight:700;font-size:13px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--bg2);box-shadow:var(--shadow);color:var(--accent)}
+.res{border:1.5px solid var(--ink)}
+.cmp{display:flex;justify-content:space-between;width:100%;border:1px solid var(--line);border-radius:12px;background:var(--bg3);padding:10px 12px;margin-top:6px;text-align:left}
+.cmp[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+#stl{width:100%;height:auto;aspect-ratio:16/10;border:1px solid var(--line);border-radius:14px;background:var(--bg3);touch-action:none;cursor:grab;display:block;margin-bottom:8px}
+.offer{margin-bottom:10px}
+.list a.item,.list button.item{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;text-decoration:none;color:var(--ink);font-weight:600}
+.list>.item:last-child{border-bottom:0}
+.list .item .chev{margin-left:auto;color:var(--muted)}
+.tip{padding:12px 14px;margin-bottom:8px}
+.tip b{display:block;margin-bottom:2px}
+.slide{text-align:center;padding:10px 6px}
+.slide .art{font-size:64px;margin:10px 0 6px}
+.slide h2{margin:6px 0;font-size:22px}
+.dots{display:flex;justify-content:center;gap:6px;margin:12px 0}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--accent);width:20px;border-radius:4px}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg2);padding:10px 16px;border-radius:12px;font-size:14px;transition:.2s;z-index:60;max-width:92vw;pointer-events:none;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+footer.legal{font-size:12px;color:var(--muted);padding:18px 0 8px}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <div class="logo"><i aria-hidden="true"></i><span id="brand">Мастерская слоёв</span></div>
+  <button class="iconbtn" data-act="cart" aria-label="Корзина"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="cnt" id="cartCnt" hidden>0</span></button>
+</div></header>
+<div class="demo" id="demoBar" hidden>Демо-режим: товары, мастера и отзывы вымышлены. Владелец отключает демо в настройках приложения.</div>
+
+<main class="wrap">
+
+<!-- КАТАЛОГ -->
+<section id="v-catalog" data-view>
+  <div class="hero">
+    <h1 id="heroTitle">Печать, которую делают люди рядом</h1>
+    <p id="heroText">Площадка, где мастера 3D-печати размещают изделия и услуги. Заказ и оплата напрямую продавцу.</p>
+    <div class="stats" id="heroStats"></div>
+  </div>
+  <label class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Подставка, миниатюры, PETG…" aria-label="Поиск по каталогу" enterkeyhint="search"></label>
+  <div class="chips" id="typeChips">
+    <button class="chip" data-act="type" data-v="all">Всё</button>
+    <button class="chip" data-act="type" data-v="print">Готовые изделия</button>
+    <button class="chip" data-act="type" data-v="service">Услуги печати</button>
+  </div>
+  <div class="toolbar">
+    <button class="btn sm" data-act="filters" id="fltBtn">Фильтры</button>
+    <select id="sort" aria-label="Сортировка">
+      <option value="pop">Популярные</option>
+      <option value="rate">С высоким рейтингом</option>
+      <option value="lo">Сначала дешёвые</option>
+      <option value="hi">Сначала дорогие</option>
+    </select>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- ЗАКАЗ ПЕЧАТИ -->
+<section id="v-print" data-view hidden>
+  <div class="hero">
+    <h1>Заказ печати</h1>
+    <p>Опиши деталь или загрузи STL. Посчитаем цену у подходящих мастеров по их тарифам.</p>
+  </div>
+  <div class="card pad">
+    <label class="field"><span>Что печатаем</span><input class="input" id="pTitle" maxlength="80" placeholder="Например, корпус для роутера"></label>
+    <label class="field"><span>Файл модели STL (необязательно)</span><input class="input" id="pFile" type="file" accept=".stl"></label>
+    <canvas id="stl" width="640" height="400" hidden role="img" aria-label="Предпросмотр модели, можно вращать"></canvas>
+    <div class="small muted" id="stlInfo" style="margin-bottom:10px"></div>
+    <div class="two">
+      <label class="field"><span>Материал</span><select id="pMat"></select></label>
+      <label class="field"><span>Цвет</span><input class="input" id="pColor" maxlength="30" placeholder="Чёрный"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Вес одной детали, г</span><input class="input" id="pGrams" type="number" inputmode="decimal" min="1" step="any" value="60"></label>
+      <label class="field"><span>Количество</span><input class="input" id="pQty" type="number" inputmode="numeric" min="1" step="1" value="1"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Срок</span><select id="pRush"><option value="0">Обычный</option><option value="1">Срочно</option></select></label>
+      <label class="field"><span>Мастер</span><select id="pMaster"></select></label>
+    </div>
+    <label class="field"><span>Комментарий</span><textarea id="pNote" maxlength="500" placeholder="Размеры, прочность, где будет использоваться"></textarea></label>
+    <button class="btn pri wide" data-act="offers">Показать предложения</button>
+    <p class="small muted" style="margin:10px 0 0">Вес не знаешь? Загрузи STL: оценим по объёму модели. Если файла нет, мастер уточнит в чате.</p>
+  </div>
+  <div id="offers"></div>
+</section>
+
+<!-- КАЛЬКУЛЯТОР -->
+<section id="v-calc" data-view hidden>
+  <div class="hero">
+    <h1>Калькулятор цены</h1>
+    <p>Посчитай стоимость изделия четырьмя способами и сравни результат.</p>
+  </div>
+  <div class="seg" id="cModes" role="group" aria-label="Способ расчёта">
+    <button data-act="cmode" data-m="w">По весу</button>
+    <button data-act="cmode" data-m="s">По размеру</button>
+    <button data-act="cmode" data-m="t">По времени</button>
+    <button data-act="cmode" data-m="f">Полный</button>
+  </div>
+  <div class="card pad" style="margin-top:12px" id="calcForm">
+    <div data-u="wf">
+      <div class="two">
+        <label class="field"><span>Материал</span><select id="cMat"></select></label>
+        <label class="field"><span>Цена за грамм, ₽</span><input class="input" id="cPg" type="number" inputmode="decimal" min="0" step="any" value="6"></label>
+      </div>
+      <label class="field"><span>Вес изделия, г</span><input class="input" id="cG" type="number" inputmode="decimal" min="0" step="any" value="80"></label>
+    </div>
+    <div data-u="s">
+      <div class="two">
+        <label class="field"><span>Длина, см</span><input class="input" id="cL" type="number" inputmode="decimal" min="0" step="any" value="10"></label>
+        <label class="field"><span>Ширина, см</span><input class="input" id="cW" type="number" inputmode="decimal" min="0" step="any" value="8"></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Высота, см</span><input class="input" id="cH" type="number" inputmode="decimal" min="0" step="any" value="6"></label>
+        <label class="field"><span>Цена за см³, ₽</span><input class="input" id="cPv" type="number" inputmode="decimal" min="0" step="any" value="1.2"></label>
+      </div>
+    </div>
+    <div data-u="tf">
+      <div class="two">
+        <label class="field"><span>Время печати, ч</span><input class="input" id="cT" type="number" inputmode="decimal" min="0" step="any" value="5"></label>
+        <label class="field"><span>Цена часа, ₽</span><input class="input" id="cPh" type="number" inputmode="decimal" min="0" step="any" value="60"></label>
+      </div>
+    </div>
+    <div class="two">
+      <label class="field"><span>Количество</span><input class="input" id="cQ" type="number" inputmode="numeric" min="1" step="1" value="1"></label>
+      <label class="field"><span>Наценка, %</span><input class="input" id="cMk" type="number" inputmode="decimal" min="0" step="any" value="20"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Обработка, ₽ за шт</span><input class="input" id="cPp" type="number" inputmode="decimal" min="0" step="any" value="0"></label>
+      <label class="field"><span>Подготовка, ₽ за заказ</span><input class="input" id="cPr" type="number" inputmode="decimal" min="0" step="any" value="0"></label>
+    </div>
+  </div>
+  <div class="card pad res" style="margin-top:12px" id="calcRes" aria-live="polite"></div>
+</section>
+
+<!-- СООБЩЕСТВО -->
+<section id="v-community" data-view hidden>
+  <div class="hero">
+    <h1>Сообщество</h1>
+    <p>Обсуждения, советы и всё для мастеров, которые хотят продавать.</p>
+  </div>
+  <h2 class="sec">Обсуждения</h2>
+  <div class="card list" id="boards"></div>
+  <h2 class="sec">Для мастеров</h2>
+  <div class="card pad">
+    <p style="margin:0 0 10px">Размещай изделия и услуги. Заказы приходят тебе в личные сообщения ВКонтакте, покупатель платит тебе напрямую, а ты выдаёшь чек. Площадка не участвует в расчётах.</p>
+    <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <span class="bdg b-ver" id="lvlVer"></span><span class="bdg b-rel" id="lvlRel"></span><span class="bdg b-top" id="lvlTop"></span>
+    </div>
+    <div id="levels" class="small"></div>
+    <button class="btn pri wide" data-act="join" style="margin-top:12px">Стать мастером</button>
+  </div>
+  <h2 class="sec">Тарифы для продавцов</h2>
+  <div id="plans"></div>
+  <h2 class="sec">Разовые услуги</h2>
+  <div class="card list" id="extras"></div>
+  <p class="small muted">Оплата услуг площадки: перевод по реквизитам, которые пришлём в сообщениях, с чеком самозанятого. Покупатели платят продавцам напрямую, площадка в этих расчётах не участвует.</p>
+  <h2 class="sec">Советы</h2>
+  <div id="tips"></div>
+  <h2 class="sec">Правила</h2>
+  <div class="card list">
+    <a class="item" data-legal="rules" target="_blank" rel="noopener">Что нельзя размещать<span class="chev">›</span></a>
+    <a class="item" data-legal="terms" target="_blank" rel="noopener">Пользовательское соглашение<span class="chev">›</span></a>
+    <a class="item" data-legal="privacy" target="_blank" rel="noopener">Политика конфиденциальности<span class="chev">›</span></a>
+  </div>
+</section>
+
+<!-- ПРОФИЛЬ -->
+<section id="v-profile" data-view hidden>
+  <div class="card pad row" style="margin-top:12px" id="me"></div>
+  <h2 class="sec">Мои заказы</h2>
+  <div id="orders"></div>
+  <h2 class="sec">Избранное</h2>
+  <div id="favs"></div>
+  <h2 class="sec">Настройки</h2>
+  <div class="card list">
+    <button class="item" data-act="allowMsg">Получать сообщения от продавца<span class="chev">›</span></button>
+    <button class="item" data-act="joinGroup">Подписаться на сообщество<span class="chev">›</span></button>
+    <button class="item" data-act="homeScreen">Добавить на главный экран<span class="chev">›</span></button>
+    <button class="item" data-act="shareApp">Поделиться приложением<span class="chev">›</span></button>
+    <a class="item" data-legal="privacy" target="_blank" rel="noopener">Документы<span class="chev">›</span></a>
+    <button class="item" data-act="wipe" style="color:var(--accent)">Удалить мои данные<span class="chev">›</span></button>
+  </div>
+  <footer class="legal" id="opInfo"></footer>
+</section>
+
+</main>
+
+<nav class="tabbar" aria-label="Разделы"><div class="wrap">
+  <button data-act="tab" data-v="catalog"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Каталог</button>
+  <button data-act="tab" data-v="print"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg>Печать</button>
+  <button data-act="tab" data-v="calc"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></svg>Расчёт</button>
+  <button data-act="tab" data-v="community"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M17 9h3a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2v2l-3-2h-4"/></svg>Сообщество</button>
+  <button data-act="tab" data-v="profile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Профиль</button>
+</div></nav>
+
+<dialog class="sheet" id="sheet" aria-modal="true"><div class="shin" id="shin"></div></dialog>
+<dialog class="sheet" id="onb" aria-modal="true"><div class="shin" id="onbin"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/@vkontakte/vk-bridge@2/dist/browser.min.js"></script>
+<script>
+/* =====================================================================
+   НАСТРОЙКИ ВЛАДЕЛЬЦА. Меняй только этот блок.
+   ===================================================================== */
+const CONFIG={
+  brand:'Мастерская слоёв',
+  // Сообщество площадки: сюда приходят анкеты продавцов, жалобы и вопросы. Заказы идут продавцам напрямую.
+  // id: число из адреса vk.com/club123456 (только цифры). screen: короткое имя из адреса vk.com/<имя>
+  community:{id:242361583, screen:'sloi_market'},
+  // Данные оператора для подвала и документов
+  operator:{name:'Бухмин Андрей Геннадьевич', inn:'', email:'sloi_market@mail.ru'},
+  // Адрес страницы с документами (лежит рядом с приложением)
+  legalUrl:'legal.html',
+  // true: показывать демо-товары и баннер. Перед запуском поставь false и заполни masters и products своими данными.
+  demo:true,
+  // Средняя скорость печати, г/ч (для оценки времени в заказе печати)
+  printSpeed:12,
+  // Материалы: цена за грамм по умолчанию и плотность (для оценки веса по STL)
+  materials:{'PLA':{price:6,density:1.24},'PETG':{price:7,density:1.27},'ABS':{price:8,density:1.04},'ASA':{price:9,density:1.07},'TPU':{price:12,density:1.21},'Смола':{price:20,density:1.10}},
+  // Продавцы (мастера). vk: короткое имя страницы продавца ВКонтакте (vk.com/<имя>), заказы уходят ему напрямую.
+  // stats заполняй по реальным данным: заказы, разные покупатели, проигранные споры за 30 дней, часы до ответа, оценки
+  masters:[
+    {id:'layerlab',vk:'',plan:'pro',name:'LayerLab',city:'Москва',about:'Печать на заказ из PETG и PLA, большие партии',printers:['Bambu Lab P1S × 4'],materials:['PLA','PETG'],status:'Самозанятый',verified:true,tariff:{gram:6,hour:60,setup:150,rush:40},stats:{orders:41,buyers:33,lostDisputes30:0,responseHours:2,ratingAvg:4.9,ratingCount:28,reportsAll:true}},
+    {id:'fastlayer',vk:'',plan:'master',name:'FastLayer',city:'Санкт-Петербург',about:'Срочная печать из ABS и ASA для улицы и тепла',printers:['Bambu Lab X1C × 6'],materials:['ABS','ASA','PETG'],status:'ИП',verified:true,tariff:{gram:8,hour:80,setup:200,rush:30},stats:{orders:12,buyers:9,lostDisputes30:0,responseHours:1,ratingAvg:4.6,ratingCount:8,reportsAll:true}},
+    {id:'resinworks',vk:'',name:'ResinWorks',city:'Казань',about:'Смоляная печать миниатюр для настольных игр',printers:['Elegoo Saturn 3'],materials:['Смола'],status:'Самозанятый',verified:true,tariff:{gram:20,hour:40,setup:100,rush:50},stats:{orders:4,buyers:3,lostDisputes30:0,responseHours:24,ratingAvg:4.8,ratingCount:3,reportsAll:true}},
+    {id:'dragonlab',vk:'',name:'DragonLab',city:'Екатеринбург',about:'Фигурки, подставки и подарки с ручной обработкой',printers:['Prusa MK4'],materials:['PLA'],status:'Самозанятый',verified:false,tariff:{gram:7,hour:70,setup:100,rush:50},stats:{orders:2,buyers:2,lostDisputes30:0,responseHours:12,ratingAvg:5,ratingCount:2,reportsAll:true}},
+    {id:'greenlayer',vk:'',name:'GreenLayer',city:'Новосибирск',about:'Горшки, кашпо и всё для сада',printers:['Creality Ender-3 V3'],materials:['PETG','PLA'],status:'Самозанятый',verified:true,tariff:{gram:6,hour:50,setup:100,rush:40},stats:{orders:7,buyers:6,lostDisputes30:1,responseHours:6,ratingAvg:4.5,ratingCount:5,reportsAll:true}}
+  ],
+  // Товары. promoUntil: 'ГГГГ-ММ-ДД' — до какой даты карточка продвигается (оплаченное продвижение).
+  // Товары. type: 'print' (готовое изделие) или 'service' (услуга печати). img: ссылка на фото (необязательно)
+  products:[
+    {id:'p1',type:'print',master:'dragonlab',title:'Дракон-подставка для телефона',price:1490,material:'PLA',size:'14 см',time:'9 ч',sold:212,emoji:'🐉',hue:18,desc:'Дракон держит телефон под удобным углом. Шёлковый PLA, ручная постобработка.'},
+    {id:'p2',promoUntil:'2026-12-31',type:'print',master:'layerlab',title:'Ночник «Луна» с рельефом кратеров',price:1900,material:'PLA',size:'12 см',time:'11 ч',sold:97,emoji:'🌙',hue:48,desc:'Тёплый ровный свет, питание от USB, шнур в комплекте.'},
+    {id:'p3',type:'print',master:'dragonlab',title:'Шагающий краб, собранный',price:2900,material:'PLA',size:'16 см',time:'14 ч',sold:58,emoji:'🦀',hue:8,desc:'Ходит от одной батарейки AA. Подвижные соединения печатаются на месте.'},
+    {id:'p4',type:'print',master:'greenlayer',title:'Горшок с самополивом, 3 размера',price:690,material:'PETG',size:'10–16 см',time:'5 ч',sold:320,emoji:'🪴',hue:130,desc:'Двойная стенка с фитилём: растение берёт воду само.'},
+    {id:'p5',type:'print',master:'layerlab',title:'Органайзер для стола, набор из 6 модулей',price:1290,material:'PLA',size:'24×16 см',time:'10 ч',sold:180,emoji:'🧰',hue:210,desc:'Модули стыкуются по сетке, можно собрать под свой стол.'},
+    {id:'p6',type:'print',master:'fastlayer',title:'Держатель катушки и кабель-менеджмент',price:790,material:'PETG',size:'набор из 6 шт',time:'4 ч',sold:305,emoji:'🔧',hue:200,desc:'Усиленные детали для популярных принтеров. PETG выдерживает нагрев рамы.'},
+    {id:'p7',type:'print',master:'greenlayer',title:'Уличное кашпо с поддоном',price:1100,material:'PETG',size:'20 см',time:'8 ч',sold:64,emoji:'🌿',hue:100,desc:'Не боится солнца и дождя, отверстия для стока воды.'},
+    {id:'p8',type:'print',master:'resinworks',title:'Набор миниатюр героев, 6 шт',price:2400,material:'Смола',size:'32 мм',time:'6 ч',sold:41,emoji:'🛡️',hue:275,desc:'Высокая детализация, загрунтованы и готовы к покраске.'},
+    {id:'s1',type:'service',master:'layerlab',title:'Печать на заказ из PETG и PLA',price:900,unit:'за 100 г',material:'PETG',size:'до 25×25×25 см',time:'от 1 дня',sold:388,emoji:'🛠️',hue:190,desc:'Пришли STL и выбери цвет. Проверю модель и пришлю фото перед отправкой.'},
+    {id:'s2',promoUntil:'2026-12-31',type:'service',master:'fastlayer',title:'Срочная печать за 24 часа, ABS и ASA',price:1300,unit:'за 100 г',material:'ABS',size:'до 25×25×25 см',time:'24 ч',sold:143,emoji:'⚡',hue:55,desc:'Для деталей, которые должны терпеть улицу и тепло.'},
+    {id:'s3',type:'service',master:'resinworks',title:'Миниатюры для настолок, смола 8K',price:250,unit:'за штуку',material:'Смола',size:'28–32 мм',time:'от 2 дней',sold:271,emoji:'🎲',hue:300,desc:'Печать и мойка. От 6 штук скидка.'},
+    {id:'s4',type:'service',master:'dragonlab',title:'Фигурка по фото',price:3500,unit:'за фигурку',material:'PLA',size:'до 15 см',time:'5–7 дней',sold:22,emoji:'🗿',hue:330,desc:'Моделирую по 2–3 фото и печатаю. Перед печатью покажу модель.'}
+  ],
+  // Отзывы, которые ты публикуешь после проверки (их присылают покупатели через приложение)
+  reviews:[
+    {product:'p1',author:'Анна',stars:5,text:'Очень аккуратная работа, телефон держит крепко.',date:'2026-09-12'},
+    {product:'p1',author:'Игорь',stars:5,text:'Подарил сыну, в восторге.',date:'2026-08-30'},
+    {product:'p2',author:'Мария',stars:5,text:'Свет мягкий, рельеф видно хорошо.',date:'2026-09-02'},
+    {product:'s1',author:'Дмитрий',stars:5,text:'Напечатали 20 креплений за два дня, все одинаковые.',date:'2026-09-20'},
+    {product:'s3',author:'Олег',stars:4,text:'Детализация отличная, одна миниатюра с дефектом, перепечатали.',date:'2026-09-05'},
+    {product:'p4',author:'Светлана',stars:4,text:'Удобный, но средний размер чуть мал.',date:'2026-08-18'}
+  ],
+  // Тарифы для продавцов. limit: сколько карточек показывается в каталоге (0 = без ограничения)
+  plans:[
+    {id:'free',name:'Старт',price:0,limit:3,perks:['До 3 карточек в каталоге','Заказы в личные сообщения','Участие в бейджах']},
+    {id:'master',name:'Мастер',price:300,limit:15,perks:['До 15 карточек','Значок тарифа в профиле','Приоритет в поиске по городу']},
+    {id:'pro',name:'Про',price:500,limit:0,perks:['Без ограничения карточек','1 неделя продвижения в месяц','Пост о мастере в сообществе раз в квартал']}
+  ],
+  // Разовые услуги для продавцов
+  extras:[
+    {id:'promo',name:'Продвижение карточки',price:200,unit:'за неделю',text:'Карточка показывается выше в каталоге с пометкой «Продвигается»'},
+    {id:'verify',name:'Проверка документов',price:300,unit:'разово',text:'Бейдж «Документы проверены» после проверки статуса и контактов'},
+    {id:'post',name:'Пост в сообществе',price:500,unit:'за пост',text:'Публикация о мастере или новом изделии в группе площадки'}
+  ],
+  // Обсуждения в сообществе. url: ссылка на тему вида https://vk.com/topic-123_456
+  boards:[
+    {title:'Принтеры и настройка',url:'https://vk.ru/topic-242361583_67959590'},
+    {title:'Материалы: PLA, PETG, ABS, смола',url:'https://vk.ru/topic-242361583_67959591'},
+    {title:'Покажи свою печать',url:'https://vk.ru/topic-242361583_67959593'},
+    {title:'Ищу мастера или модель',url:'https://vk.ru/topic-242361583_67959594'},
+    {title:'Вопросы и предложения по площадке',url:'https://vk.ru/topic-242361583_67959595'}
+  ]
+};
+/* ===================================================================== */
+
+const BADGE_RULES={reliable:{orders:3,buyers:2,responseHours:48,minAvg:4.0},top:{orders:15,minAvg:4.7}};
+const TIPS=[
+  ['Первый слой не держится','Протри стол спиртом, проверь зазор сопла по листу бумаги и снизь скорость первого слоя.'],
+  ['PLA для дома, PETG для нагрузки','PLA мягчеет примерно с 55 °C, для балкона и машины бери PETG или ASA.'],
+  ['Сушите пластик','Если нить трещит в сопле, она впитала влагу. PLA сушат при 45–50 °C несколько часов.'],
+  ['Как оценить цену','Цена складывается из пластика, часов работы принтера, обработки и подготовки. Попробуй вкладку «Расчёт».']
+];
+
+/* ---------- утилиты ---------- */
+const $=s=>document.querySelector(s);
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
+const dec=n=>String(Math.round(n*100)/100).replace('.',',');
+const fdate=ts=>new Date(ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const plural=(n,a,b,c)=>{const m=Math.abs(n)%100,k=m%10;return m>10&&m<20?c:k>1&&k<5?b:k===1?a:c};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const timeout=(p,ms)=>Promise.race([p,sleep(ms).then(()=>{throw new Error('timeout')})]);
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.k);toast.k=setTimeout(()=>t.classList.remove('show'),2600)}
+const ICON={
+  ver:'<svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3z"/><path d="m9 12 2 2 4-4"/></svg>',
+  rel:'<svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="10" r="6"/><path d="m9.5 10 1.7 1.7 3.3-3.3M8.5 15.5 7 21l5-2 5 2-1.5-5.5"/></svg>',
+  top:'<svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M9 21h6"/></svg>'
+};
+
+/* ---------- данные ---------- */
+const MAST={};CONFIG.masters.forEach(m=>MAST[m.id]=m);
+const DEMO=!!CONFIG.demo;
+const PLAN={};(CONFIG.plans||[]).forEach(p=>PLAN[p.id]=p);
+const planOf=m=>PLAN[m&&m.plan]||(CONFIG.plans||[])[0]||{id:'free',name:'Старт',limit:0};
+const TODAY=new Date().toISOString().slice(0,10);
+const isPromo=p=>!!(p.promoUntil&&p.promoUntil>=TODAY);
+const PRODUCTS=(()=>{const cnt={};return CONFIG.products.filter(p=>{if(!MAST[p.master]||(p.type!=='print'&&p.type!=='service'))return false;const lim=planOf(MAST[p.master]).limit||0;cnt[p.master]=(cnt[p.master]||0)+1;return !lim||cnt[p.master]<=lim})})();
+const PROD={};PRODUCTS.forEach(p=>PROD[p.id]=p);
+const LP={};try{new URLSearchParams(location.search).forEach((v,k)=>LP[k]=v)}catch(e){}
+const IN_VK=!!(LP.vk_app_id||LP.vk_user_id||LP.sign);
+const TYPE={print:'Готовое изделие',service:'Услуга печати'};
+const STATUS={sent:'Отправлен мастеру',paid:'Оплачен',received:'Получен',problem:'Есть проблема',cancelled:'Отменён'};
+
+function reviewsOf(pid){return CONFIG.reviews.filter(r=>r.product===pid)}
+function prodRating(p){const r=reviewsOf(p.id);return r.length?{avg:r.reduce((a,x)=>a+x.stars,0)/r.length,n:r.length}:null}
+function badges(m){
+  const s=m.stats||{},R=BADGE_RULES.reliable,hasR=(s.ratingCount||0)>0;
+  const crit=[
+    ['Завершённых заказов',(s.orders||0)>=R.orders,(s.orders||0)+' из '+R.orders],
+    ['Разных покупателей',(s.buyers||0)>=R.buyers,(s.buyers||0)+' из '+R.buyers],
+    ['Нет проигранных споров за 30 дней',!(s.lostDisputes30>0),s.lostDisputes30>0?'сейчас '+s.lostDisputes30:''],
+    ['Отчёты о печати ко всем заказам',(s.orders||0)>0&&s.reportsAll!==false,''],
+    ['Ответ покупателю до '+R.responseHours+' ч',(s.responseHours==null?999:s.responseHours)<=R.responseHours,s.responseHours!=null?'сейчас до '+s.responseHours+' ч':''],
+    ['Оценка от '+dec(R.minAvg)+', если есть отзывы',!hasR||s.ratingAvg>=R.minAvg,hasR?'сейчас '+dec(s.ratingAvg):'отзывы не обязательны']
+  ];
+  const done=crit.filter(c=>c[1]).length,reliable=done===crit.length;
+  const top=reliable&&(s.orders||0)>=BADGE_RULES.top.orders&&hasR&&s.ratingAvg>=BADGE_RULES.top.minAvg;
+  return{verified:!!m.verified,reliable,top,crit,done};
+}
+function badgeIcons(m){const b=badges(m);return (b.verified?'<span style="color:var(--accent)" title="Документы проверены">'+ICON.ver+'</span>':'')+(b.top?'<span style="color:var(--warn)" title="Топ мастера">'+ICON.top+'</span>':b.reliable?'<span style="color:var(--ok)" title="Надёжный мастер">'+ICON.rel+'</span>':'')}
+function badgePills(m){const b=badges(m);let h='';
+  if(b.verified)h+='<span class="bdg b-ver">'+ICON.ver+'Документы проверены</span>';
+  if(b.top)h+='<span class="bdg b-top">'+ICON.top+'Топ мастера</span>';
+  if(b.reliable)h+='<span class="bdg b-rel">'+ICON.rel+'Надёжный мастер</span>';
+  if(!b.reliable)h+='<span class="bdg b-new">Новичок: осталось '+(b.crit.length-b.done)+' '+plural(b.crit.length-b.done,'условие','условия','условий')+'</span>';
+  return h;}
+const fmtPrice=p=>rub(p.price)+(p.unit?' <small>'+esc(p.unit)+'</small>':'');
+const tile=(p,cls)=>p.img?'<img src="'+esc(p.img)+'" alt="'+esc(p.title)+'" loading="lazy"'+(cls?' class="'+cls+'"':'')+'>':'<div class="tile'+(cls?' '+cls:'')+'" style="--h:'+(+p.hue||200)+'"><span aria-hidden="true">'+esc(p.emoji||'🖨️')+'</span></div>';
+
+/* ---------- VK Bridge ---------- */
+const B={ok:false,
+  async send(m,p){if(!window.vkBridge)throw new Error('no bridge');return vkBridge.send(m,p||{})},
+  async init(){
+    if(!window.vkBridge||!IN_VK)return;
+    try{vkBridge.subscribe(e=>{const d=e&&e.detail;if(d&&d.type==='VKWebAppUpdateConfig'&&d.data){const a=d.data.appearance||(String(d.data.scheme||'').indexOf('dark')>=0?'dark':'light');document.documentElement.setAttribute('data-theme',a)}})}catch(e){}
+    try{await timeout(vkBridge.send('VKWebAppInit'),3000);this.ok=true}catch(e){}
+  }
+};
+
+/* ---------- хранилище: VK Storage + запасной localStorage ---------- */
+const Store={n:{},
+  split(s){const out=[];let i=0;while(i<s.length){let j=Math.min(i+1700,s.length);const c=s.charCodeAt(j-1);if(j<s.length&&c>=0xD800&&c<=0xDBFF)j--;out.push(s.slice(i,j));i=j}return out},
+  async get(k){
+    let v=null;
+    if(B.ok){try{
+      const r=await timeout(B.send('VKWebAppStorageGet',{keys:[k+'_n']}),4000);
+      const n=+(((r.keys||[])[0]||{}).value||0);this.n[k]=n;
+      if(n>0){const ks=[];for(let i=0;i<n;i++)ks.push(k+'_'+i);
+        const r2=await timeout(B.send('VKWebAppStorageGet',{keys:ks}),4000),m={};(r2.keys||[]).forEach(x=>m[x.key]=x.value);
+        v=ks.map(x=>m[x]||'').join('')}
+    }catch(e){v=null}}
+    if(!v){try{v=localStorage.getItem('sl_'+k)}catch(e){}}
+    try{return v?JSON.parse(v):null}catch(e){return null}
+  },
+  async set(k,obj){
+    const s=JSON.stringify(obj);
+    try{localStorage.setItem('sl_'+k,s)}catch(e){}
+    if(!B.ok)return;
+    const parts=this.split(s);if(parts.length>60)return;
+    try{
+      for(let i=0;i<parts.length;i++)await B.send('VKWebAppStorageSet',{key:k+'_'+i,value:parts[i]});
+      for(let i=parts.length;i<(this.n[k]||0);i++)await B.send('VKWebAppStorageSet',{key:k+'_'+i,value:''});
+      await B.send('VKWebAppStorageSet',{key:k+'_n',value:String(parts.length)});this.n[k]=parts.length;
+    }catch(e){}
+  },
+  async clear(k){
+    try{localStorage.removeItem('sl_'+k)}catch(e){}
+    if(!B.ok)return;
+    try{for(let i=0;i<(this.n[k]||0);i++)await B.send('VKWebAppStorageSet',{key:k+'_'+i,value:''});await B.send('VKWebAppStorageSet',{key:k+'_n',value:''});this.n[k]=0}catch(e){}
+  }
+};
+
+/* ---------- состояние ---------- */
+const S={tab:'catalog',q:'',type:'all',mat:'',city:'',maxPrice:0,trusted:false,sort:'pop',
+  cart:{},fav:[],orders:[],consent:false,onb:false,name:'',user:null,cmode:'f'};
+let saveQ=Promise.resolve(),saveT=0;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{const d={cart:S.cart,fav:S.fav,orders:S.orders.slice(0,60),consent:S.consent,onb:S.onb,name:S.name};saveQ=saveQ.then(()=>Store.set('acct',d))},350)}
+
+/* ---------- шторка ---------- */
+const sheet=$('#sheet');
+function openSheet(html){$('#shin').innerHTML='<div class="grip" aria-hidden="true"></div>'+html;$('#shin').scrollTop=0;if(!sheet.open){sheet.showModal();try{history.pushState({sheet:1},'')}catch(e){}}}
+function closeSheet(){if(!sheet.open)return;if(history.state&&history.state.sheet){history.back()}else sheet.close()}
+window.addEventListener('popstate',()=>{if(sheet.open)sheet.close()});
+sheet.addEventListener('cancel',e=>{e.preventDefault();closeSheet()});
+sheet.addEventListener('click',e=>{if(e.target===sheet)closeSheet()});
+const head=t=>'<div class="shhead"><h2>'+t+'</h2><button class="x" data-act="close" aria-label="Закрыть">×</button></div>';
+
+/* ---------- вкладки ---------- */
+function setTab(t){
+  S.tab=t;document.querySelectorAll('[data-view]').forEach(v=>v.hidden=v.id!=='v-'+t);
+  document.querySelectorAll('.tabbar button').forEach(b=>{if(b.dataset.v===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  if(t==='profile')drawProfile();if(t==='calc')recalc();if(t==='community')drawCommunity();
+  window.scrollTo(0,0);
+}
+
+/* ---------- каталог ---------- */
+function filtered(){
+  const q=S.q.trim().toLowerCase();
+  let r=PRODUCTS.filter(p=>{const m=MAST[p.master];
+    if(S.type!=='all'&&p.type!==S.type)return false;
+    if(S.mat&&p.material!==S.mat)return false;
+    if(S.city&&m.city!==S.city)return false;
+    if(S.maxPrice&&p.price>S.maxPrice)return false;
+    if(S.trusted&&!badges(m).reliable)return false;
+    return !q||(p.title+' '+m.name+' '+p.material+' '+m.city+' '+(p.desc||'')).toLowerCase().indexOf(q)>=0});
+  const rt=p=>{const x=prodRating(p);return x?x.avg:(MAST[p.master].stats||{}).ratingAvg||0};
+  r.sort(S.sort==='lo'?(a,b)=>a.price-b.price:S.sort==='hi'?(a,b)=>b.price-a.price:S.sort==='rate'?(a,b)=>rt(b)-rt(a):(a,b)=>(b.sold||0)-(a.sold||0));
+  if(S.sort==='pop'||S.sort==='rate')r.sort((a,b)=>(isPromo(b)?1:0)-(isPromo(a)?1:0));
+  return r;
+}
+function card(p){
+  const m=MAST[p.master],f=S.fav.indexOf(p.id)>=0,r=prodRating(p);
+  return '<article class="card prod" data-act="prod" data-id="'+esc(p.id)+'">'
+   +'<div class="ph">'+tile(p)+'<button class="fav" data-act="fav" data-id="'+esc(p.id)+'" aria-label="'+(f?'Убрать из избранного':'В избранное')+'" aria-pressed="'+f+'">'+(f?'❤️':'🤍')+'</button></div>'
+   +(isPromo(p)?'<span class="promo">Продвигается</span>':'')+'<div class="pb"><div class="ptype">'+TYPE[p.type]+'</div><div class="pt">'+esc(p.title)+'</div>'
+   +'<div class="pm">'+badgeIcons(m)+esc(m.name)+(r?' · ★ '+dec(r.avg):'')+'</div>'
+   +'<div class="pr"><span class="price">'+fmtPrice(p)+'</span></div>'
+   +'<button class="btn pri sm" data-act="add" data-id="'+esc(p.id)+'" style="margin-top:6px">В корзину</button></div></article>';
+}
+function drawCatalog(){
+  document.querySelectorAll('#typeChips .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.type));
+  const n=(S.mat?1:0)+(S.city?1:0)+(S.maxPrice?1:0)+(S.trusted?1:0);
+  $('#fltBtn').textContent=n?'Фильтры · '+n:'Фильтры';
+  const r=filtered();
+  $('#grid').innerHTML=r.length?r.map(card).join(''):'<div class="empty">'+(PRODUCTS.length?'Ничего не нашлось. Попробуй другой запрос или сбрось фильтры.':'Каталог пока пуст. Скоро здесь появятся изделия мастеров.')+'</div>';
+}
+function drawHero(){
+  const cities=new Set(CONFIG.masters.map(m=>m.city));
+  $('#heroStats').innerHTML='<span>'+CONFIG.masters.length+' '+plural(CONFIG.masters.length,'мастер','мастера','мастеров')+'</span><span>'+PRODUCTS.length+' '+plural(PRODUCTS.length,'предложение','предложения','предложений')+'</span><span>'+cities.size+' '+plural(cities.size,'город','города','городов')+'</span>';
+}
+function openFilters(){
+  const mats=Object.keys(CONFIG.materials),cities=[...new Set(CONFIG.masters.map(m=>m.city))].sort();
+  openSheet(head('Фильтры')
+   +'<label class="field"><span>Материал</span><select id="fMat"><option value="">Любой</option>'+mats.map(x=>'<option'+(x===S.mat?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>'
+   +'<label class="field"><span>Город мастера</span><select id="fCity"><option value="">Любой</option>'+cities.map(x=>'<option'+(x===S.city?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>'
+   +'<label class="field"><span>Цена до, ₽</span><input class="input" id="fMax" type="number" inputmode="numeric" min="0" step="100" value="'+(S.maxPrice||'')+'" placeholder="Без ограничения"></label>'
+   +'<label class="check"><input type="checkbox" id="fTr"'+(S.trusted?' checked':'')+'><span>Только надёжные мастера</span></label>'
+   +'<div class="two"><button class="btn" data-act="fReset">Сбросить</button><button class="btn pri" data-act="fApply">Показать</button></div>');
+}
+
+/* ---------- товар и мастер ---------- */
+function openProduct(id){
+  const p=PROD[id];if(!p){toast('Товар не найден');return}
+  const m=MAST[p.master],rv=reviewsOf(p.id),r=prodRating(p),f=S.fav.indexOf(p.id)>=0;
+  openSheet(head(esc(p.title))
+   +'<div style="border-radius:14px;overflow:hidden;margin-bottom:12px;font-size:84px">'+tile(p).replace('class="tile"','class="tile" style="font-size:84px;--h:'+(+p.hue||200)+'"')+'</div>'
+   +'<div class="row between"><div><div class="ptype">'+TYPE[p.type]+'</div><div class="big">'+fmtPrice(p)+'</div></div>'+(r?'<div class="muted small">★ '+dec(r.avg)+' · '+r.n+' '+plural(r.n,'отзыв','отзыва','отзывов')+'</div>':'')+'</div>'
+   +'<p>'+esc(p.desc||'')+'</p>'
+   +'<div class="card pad" style="margin-bottom:12px"><div class="kv"><span>Материал</span><b>'+esc(p.material||'—')+'</b></div><div class="kv"><span>Размер</span><b>'+esc(p.size||'—')+'</b></div><div class="kv"><span>Время печати</span><b>'+esc(p.time||'—')+'</b></div><div class="kv"><span>Оплата</span><b>напрямую мастеру, с чеком</b></div></div>'
+   +'<button class="card pad row" data-act="master" data-id="'+esc(m.id)+'" style="width:100%;text-align:left;margin-bottom:12px;cursor:pointer"><div class="ava">'+esc(m.name.charAt(0))+'</div><div style="flex:1;min-width:0"><b>'+esc(m.name)+'</b><div class="small muted">'+esc(m.city)+' · '+esc(m.status)+'</div><div class="row" style="gap:4px;flex-wrap:wrap;margin-top:4px">'+badgePills(m)+'</div></div><span class="muted">›</span></button>'
+   +'<div class="two" style="margin-bottom:10px"><button class="btn" data-act="share" data-id="'+esc(p.id)+'">Поделиться</button><button class="btn" data-act="fav" data-id="'+esc(p.id)+'" aria-pressed="'+f+'">'+(f?'❤️ В избранном':'🤍 В избранное')+'</button></div>'
+   +'<button class="btn pri wide" data-act="add" data-id="'+esc(p.id)+'">В корзину</button>'
+   +'<h2 class="sec">Отзывы покупателей</h2>'
+   +(rv.length?rv.map(x=>'<div class="card pad" style="margin-bottom:8px"><div class="row between small"><b>'+esc(x.author)+'</b><span style="color:var(--accent)">'+'★'.repeat(x.stars)+'<span class="muted">'+'★'.repeat(5-x.stars)+'</span></span></div><div style="margin-top:4px">'+esc(x.text)+'</div><div class="small muted" style="margin-top:4px">'+esc(new Date(x.date).toLocaleDateString('ru-RU'))+'</div></div>').join(''):'<p class="muted">Отзывов пока нет. Купи и расскажи первым.</p>')
+   +'<p class="small" style="margin-top:14px"><button class="btn sm" data-act="report" data-id="'+esc(p.id)+'">Пожаловаться на карточку</button></p>');
+}
+function openMaster(id){
+  const m=MAST[id];if(!m)return;
+  const b=badges(m),s=m.stats||{},t=m.tariff||{},its=PRODUCTS.filter(p=>p.master===id);
+  openSheet(head(esc(m.name))
+   +'<div class="row" style="margin-bottom:10px"><div class="ava" style="width:56px;height:56px;font-size:22px">'+esc(m.name.charAt(0))+'</div><div><div>'+esc(m.about||'')+'</div><div class="small muted">'+esc(m.city)+' · '+esc(m.status)+', выдаёт чек</div></div></div>'
+   +'<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">'+badgePills(m)+(planOf(m).price?'<span class="bdg b-new">Тариф «'+esc(planOf(m).name)+'»</span>':'')+'</div>'
+   +'<div class="card pad" style="margin-bottom:12px"><div class="kv"><span>Заказов</span><b>'+(s.orders||0)+'</b></div><div class="kv"><span>Оценка</span><b>'+(s.ratingCount?'★ '+dec(s.ratingAvg)+' ('+s.ratingCount+')':'нет отзывов')+'</b></div><div class="kv"><span>Отвечает</span><b>до '+(s.responseHours!=null?s.responseHours:'—')+' ч</b></div><div class="kv"><span>Принтеры</span><b>'+esc((m.printers||[]).join(', ')||'—')+'</b></div><div class="kv"><span>Материалы</span><b>'+esc((m.materials||[]).join(', ')||'—')+'</b></div></div>'
+   +'<div class="card pad" style="margin-bottom:12px"><b>Тарифы</b><div class="kv"><span>Пластик</span><b>'+dec(t.gram||0)+' ₽/г</b></div><div class="kv"><span>Работа принтера</span><b>'+dec(t.hour||0)+' ₽/ч</b></div><div class="kv"><span>Подготовка заказа</span><b>'+rub(t.setup||0)+'</b></div><div class="kv"><span>Срочность</span><b>+'+(t.rush||0)+'%</b></div></div>'
+   +(b.reliable?'':'<div class="card pad" style="margin-bottom:12px"><b>До бейджа «Надёжный мастер»</b><div class="bar"><i style="width:'+Math.round(b.done/b.crit.length*100)+'%"></i></div>'+b.crit.map(c=>'<div class="crit"><span class="dot '+(c[1]?'y':'n')+'">'+(c[1]?'✓':'')+'</span><span><b>'+c[0]+'</b>'+(c[2]?' <span class="muted">('+c[2]+')</span>':'')+'</span></div>').join('')+'</div>')
+   +(sellerUrl(m)?'<a class="btn wide" href="'+esc(sellerUrl(m))+'" target="_blank" rel="noopener" style="margin-bottom:8px">Написать продавцу</a>':'')+'<button class="btn pri wide" data-act="printWith" data-id="'+esc(m.id)+'">Заказать печать у мастера</button>'
+   +(its.length?'<h2 class="sec">Изделия и услуги</h2><div class="card pad">'+its.map(p=>'<div class="mrow" data-act="prod" data-id="'+esc(p.id)+'" style="cursor:pointer">'+tile(p,'mini')+'<div style="flex:1;min-width:0"><b class="small">'+esc(p.title)+'</b><div class="small muted">'+fmtPrice(p)+'</div></div><span class="muted">›</span></div>').join('')+'</div>':''));
+}
+
+/* ---------- корзина и оформление ---------- */
+const cartLines=()=>Object.keys(S.cart).filter(id=>PROD[id]&&S.cart[id]>0).map(id=>({p:PROD[id],q:S.cart[id]}));
+function drawCartCnt(){const n=cartLines().reduce((a,x)=>a+x.q,0);const c=$('#cartCnt');c.hidden=!n;c.textContent=n}
+function addToCart(id){if(!PROD[id])return;S.cart[id]=(S.cart[id]||0)+1;save();drawCartCnt();toast('Добавлено в корзину');if(sheet.open&&$('#shin').dataset.k==='cart')openCart()}
+function openCart(){
+  const L=cartLines();
+  if(!L.length){openSheet(head('Корзина')+'<p class="muted">Корзина пуста. Загляни в каталог.</p><button class="btn pri wide" data-act="goCatalog">В каталог</button>');$('#shin').dataset.k='cart';return}
+  const by={};L.forEach(x=>(by[x.p.master]=by[x.p.master]||[]).push(x));
+  const total=L.reduce((a,x)=>a+x.p.price*x.q,0);
+  openSheet(head('Корзина')
+   +Object.keys(by).map(mid=>'<div class="card pad" style="margin-bottom:10px"><div class="row between"><b>'+esc(MAST[mid].name)+'</b><span class="small muted">'+esc(MAST[mid].city)+'</span></div>'
+     +by[mid].map(x=>'<div class="mrow">'+tile(x.p,'mini')+'<div style="flex:1;min-width:0"><div class="small" style="font-weight:600">'+esc(x.p.title)+'</div><div class="small muted">'+fmtPrice(x.p)+'</div></div><div class="qty"><button data-act="dec" data-id="'+esc(x.p.id)+'" aria-label="Меньше">−</button><span>'+x.q+'</span><button data-act="inc" data-id="'+esc(x.p.id)+'" aria-label="Больше">+</button></div></div>').join('')
+     +'<div class="kv"><span>Итого у мастера</span><b>'+rub(by[mid].reduce((a,x)=>a+x.p.price*x.q,0))+'</b></div></div>').join('')
+   +'<div class="row between" style="margin:6px 0 12px"><b>Всего</b><span class="big">'+rub(total)+'</span></div>'
+   +'<p class="small muted" style="margin-top:0">Оплата напрямую каждому мастеру после подтверждения заказа. Для услуг печати цена указана за единицу, точную сумму мастер назовёт после проверки модели.</p>'
+   +'<button class="btn pri wide" data-act="checkout">Оформить заказ</button>');
+  $('#shin').dataset.k='cart';
+}
+function openCheckout(){
+  const L=cartLines();if(!L.length)return;
+  openSheet(head('Оформление')
+   +(S.user?'':'<label class="field"><span>Как к тебе обращаться</span><input class="input" id="oName" maxlength="40" value="'+esc(S.name)+'" placeholder="Имя"></label>')
+   +'<label class="field"><span>Получение</span><select id="oDel"><option value="pickup">Самовывоз у мастера</option><option value="post">Доставка (СДЭК, Почта и т. п.)</option><option value="courier">Курьер по городу</option></select></label>'
+   +'<label class="field" id="oAddrF" hidden><span>Город и адрес или пункт выдачи</span><input class="input" id="oAddr" maxlength="160" placeholder="Город, улица, дом или адрес пункта выдачи"></label>'
+   +'<label class="field"><span>Оплата мастеру</span><select id="oPay"><option value="sbp">Перевод по СБП</option><option value="card">Перевод на карту</option><option value="cod">При получении</option></select></label>'
+   +'<label class="field"><span>Комментарий</span><textarea id="oNote" maxlength="400" placeholder="Цвет, сроки, пожелания"></textarea></label>'
+   +'<label class="check"><input type="checkbox" id="oOk"><span>Согласен передать данные заказа мастеру для его исполнения (<a href="'+legal('privacy')+'" target="_blank" rel="noopener">политика</a>)</span></label>'
+   +'<button class="btn pri wide" data-act="placeOrder">Отправить заказ</button>'
+   +'<p class="small muted">Договор заключается с продавцом. Площадка только размещает предложения, не принимает деньги и не хранит платёжные данные.</p>');
+  $('#shin').dataset.k='checkout';
+}
+const DEL={pickup:'Самовывоз',post:'Доставка',courier:'Курьер по городу'};
+const PAY={sbp:'Перевод по СБП',card:'Перевод на карту',cod:'При получении'};
+const newNo=()=>'СЗ-'+Date.now().toString(36).toUpperCase().slice(-6)+Math.floor(Math.random()*36).toString(36).toUpperCase();
+function buyerName(){return S.user?S.user.name:(S.name||'Покупатель')}
+async function placeOrder(){
+  const L=cartLines();if(!L.length)return;
+  if(!S.user){const n=($('#oName').value||'').trim();if(!n){toast('Укажи имя');$('#oName').focus();return}S.name=n.slice(0,40)}
+  const del=$('#oDel').value,addr=($('#oAddr').value||'').trim();
+  if(del!=='pickup'&&!addr){toast('Укажи адрес доставки');$('#oAddr').focus();return}
+  if(!$('#oOk').checked){toast('Нужно согласие на передачу данных мастеру');return}
+  const pay=$('#oPay').value,note=($('#oNote').value||'').trim(),by={};
+  L.forEach(x=>(by[x.p.master]=by[x.p.master]||[]).push(x));
+  const made=Object.keys(by).map(mid=>({no:newNo(),ts:Date.now(),kind:'cart',master:mid,items:by[mid].map(x=>({t:x.p.title,price:x.p.price,unit:x.p.unit||'',q:x.q})),total:by[mid].reduce((a,x)=>a+x.p.price*x.q,0),del,addr,pay,note,status:'sent'}));
+  S.orders=made.concat(S.orders);S.cart={};save();drawCartCnt();
+  sendOrders(made);
+}
+function orderText(o){
+  const m=MAST[o.master]||{name:o.master};
+  const L=['Заказ '+o.no+' через «'+CONFIG.brand+'»','Мастер: '+m.name,''];
+  if(o.kind==='print'){const r=o.req;L.push('Печать на заказ: '+r.title,'Материал: '+r.mat+(r.color?', цвет: '+r.color:''),'Вес детали: ~'+r.grams+' г, количество: '+r.qty+(r.rush?', срочно':''),r.file?'Файл: '+r.file+' (пришлю в этот чат)':'Файла пока нет, обсудим модель','Оценка: '+rub(o.total))}
+  else{o.items.forEach(i=>L.push('• '+i.t+(i.q>1?' × '+i.q:'')+' — '+rub(i.price*i.q)+(i.unit?' ('+i.unit+')':'')));L.push('Итого: '+rub(o.total))}
+  L.push('','Получение: '+DEL[o.del]+(o.addr?', '+o.addr:''),'Оплата: '+PAY[o.pay]);
+  if(o.note)L.push('Комментарий: '+o.note);
+  L.push('Покупатель: '+buyerName());
+  return L.join('\n');
+}
+async function copyText(t){
+  if(B.ok){try{await B.send('VKWebAppCopyText',{text:t});return true}catch(e){}}
+  try{await navigator.clipboard.writeText(t);return true}catch(e){}
+  try{const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(e){return false}
+}
+const chatUrl=()=>CONFIG.community.screen?'https://vk.me/'+encodeURIComponent(CONFIG.community.screen):(CONFIG.community.id?'https://vk.me/club'+CONFIG.community.id:'');
+let lastMsg='';
+async function sendFlow(title,text,intro){
+  lastMsg=text;const ok=await copyText(text);
+  if(B.ok&&CONFIG.community.id){try{await B.send('VKWebAppAllowMessagesFromGroup',{group_id:+CONFIG.community.id})}catch(e){}}
+  const u=chatUrl();
+  openSheet(head(title)
+   +'<p style="margin-top:0">'+esc(intro)+'</p>'
+   +(ok?'':'<p class="small" style="color:var(--warn)">Скопировать автоматически не получилось. Нажми «Скопировать текст».</p>')
+   +'<pre class="msg">'+esc(text)+'</pre>'
+   +'<div class="two"><button class="btn" data-act="copyMsg">Скопировать текст</button>'
+   +(u?'<a class="btn pri" href="'+esc(u)+'" target="_blank" rel="noopener">Открыть чат</a>':'<button class="btn pri" disabled>Чат не настроен</button>')+'</div>'
+   +(u?'':'<p class="small muted">Владелец приложения ещё не указал сообщество для заказов (раздел CONFIG.community).</p>')
+   +'<p class="small muted">ВКонтакте не разрешает приложениям отправлять сообщения от твоего имени, поэтому вставить текст нужно вручную.</p>');
+  $('#shin').dataset.k='send';
+}
+
+let MSGS=[];
+function sellerUrl(m){return m&&m.vk?'https://vk.me/'+encodeURIComponent(m.vk):''}
+async function sendOrders(list,extra,texts,title){
+  MSGS=list.map((o,i)=>texts&&texts[i]?texts[i]:orderText(o));
+  const one=list.length===1;if(one)await copyText(MSGS[0]);
+  openSheet(head(title||(one?'Остался один шаг':'Отправь заказы продавцам'))
+   +'<p style="margin-top:0">'+(one?'Текст скопирован. ':'')+'Открой чат с продавцом, вставь текст и отправь. Продавец пришлёт реквизиты для оплаты и чек.'+(extra?' '+esc(extra):'')+'</p>'
+   +list.map((o,i)=>{const m=MAST[o.master]||{name:o.master},u=sellerUrl(m);return '<div class="card pad" style="margin-bottom:10px"><div class="row between"><b>'+esc(m.name)+'</b><span class="small muted">'+esc(o.no)+'</span></div><pre class="msg">'+esc(MSGS[i])+'</pre><div class="two"><button class="btn" data-act="copyOne" data-i="'+i+'">Скопировать</button>'+(u?'<a class="btn pri" href="'+esc(u)+'" target="_blank" rel="noopener">Написать продавцу</a>':'<button class="btn pri" disabled>Нет контакта</button>')+'</div>'+(u?'':'<p class="small muted" style="margin:8px 0 0">У продавца не указана страница ВКонтакте. Владелец площадки должен добавить её в настройках.</p>')+'</div>'}).join('')
+   +'<p class="small muted">ВКонтакте не разрешает приложениям писать от твоего имени, поэтому текст нужно вставить вручную.</p>');
+  $('#shin').dataset.k='send';
+}
+/* ---------- заказ печати ---------- */
+let MESH=null,RX=0.9,RZ=0.6,OFFERS=null;
+function fillPrintSelects(pre){
+  $('#pMat').innerHTML=Object.keys(CONFIG.materials).map(k=>'<option>'+esc(k)+'</option>').join('');
+  $('#pMaster').innerHTML='<option value="">Любой подходящий</option>'+CONFIG.masters.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+' · '+esc(m.city)+'</option>').join('');
+  if(pre)$('#pMaster').value=pre;
+}
+function calcOffers(){
+  const title=$('#pTitle').value.trim(),mat=$('#pMat').value,grams=Math.max(1,+$('#pGrams').value||0),qty=Math.max(1,Math.round(+$('#pQty').value||1)),rush=$('#pRush').value==='1',only=$('#pMaster').value;
+  if(!title){toast('Напиши, что нужно напечатать');$('#pTitle').focus();return}
+  const hours=grams/Math.max(1,CONFIG.printSpeed);
+  const list=CONFIG.masters.filter(m=>(!only||m.id===only)&&(m.materials||[]).indexOf(mat)>=0).map(m=>{
+    const t=m.tariff||{},unit=grams*(t.gram||CONFIG.materials[mat].price)+hours*(t.hour||0);
+    let total=(t.setup||0)+unit*qty;if(rush)total*=1+(t.rush||0)/100;
+    const days=Math.max(1,Math.ceil(hours*qty/10))+(rush?0:1);
+    return{m,total:Math.round(total/10)*10,days:rush?Math.max(1,days-1):days};
+  }).sort((a,b)=>a.total-b.total);
+  OFFERS={title,mat,color:$('#pColor').value.trim(),grams:Math.round(grams),qty,rush,note:$('#pNote').value.trim(),file:($('#pFile').files[0]||{}).name||'',list};
+  const box=$('#offers');
+  if(!list.length){box.innerHTML='<div class="card pad" style="margin-top:12px"><b>Нет мастеров с материалом '+esc(mat)+'</b><p class="muted small" style="margin:6px 0 0">Выбери другой материал или «Любой подходящий» мастер.</p></div>';box.scrollIntoView({behavior:'smooth',block:'start'});return}
+  box.innerHTML='<h2 class="sec">Предложения</h2><p class="small muted" style="margin-top:-4px">Оценка по тарифам мастеров. Точную цену мастер подтвердит после проверки модели.</p>'
+   +list.map((o,i)=>{const s=o.m.stats||{};return '<div class="card pad offer"><div class="row"><div class="ava">'+esc(o.m.name.charAt(0))+'</div><div style="flex:1;min-width:0"><b>'+esc(o.m.name)+'</b> '+badgeIcons(o.m)+'<div class="small muted">'+esc(o.m.city)+' · '+(s.ratingCount?'★ '+dec(s.ratingAvg):'нет отзывов')+' · отвечает до '+(s.responseHours!=null?s.responseHours:'—')+' ч</div></div><div style="text-align:right"><div class="price">'+rub(o.total)+'</div><div class="small muted">'+o.days+' '+plural(o.days,'день','дня','дней')+'</div></div></div>'
+     +'<div class="two" style="margin-top:10px"><button class="btn sm" data-act="master" data-id="'+esc(o.m.id)+'">О мастере</button><button class="btn pri sm" data-act="takeOffer" data-i="'+i+'">Выбрать</button></div></div>'}).join('');
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function takeOffer(i){
+  const r=OFFERS,o=r&&r.list[i];if(!o)return;
+  openSheet(head('Заказ у '+esc(o.m.name))
+   +'<div class="card pad" style="margin-bottom:12px"><div class="kv"><span>Изделие</span><b>'+esc(r.title)+'</b></div><div class="kv"><span>Материал</span><b>'+esc(r.mat)+(r.color?', '+esc(r.color):'')+'</b></div><div class="kv"><span>Количество</span><b>'+r.qty+'</b></div><div class="kv"><span>Оценка цены</span><b>'+rub(o.total)+'</b></div></div>'
+   +(S.user?'':'<label class="field"><span>Как к тебе обращаться</span><input class="input" id="oName" maxlength="40" value="'+esc(S.name)+'" placeholder="Имя"></label>')
+   +'<label class="field"><span>Получение</span><select id="oDel"><option value="pickup">Самовывоз у мастера</option><option value="post">Доставка (СДЭК, Почта и т. п.)</option><option value="courier">Курьер по городу</option></select></label>'
+   +'<label class="field" id="oAddrF" hidden><span>Город и адрес или пункт выдачи</span><input class="input" id="oAddr" maxlength="160"></label>'
+   +'<label class="field"><span>Оплата мастеру</span><select id="oPay"><option value="sbp">Перевод по СБП</option><option value="card">Перевод на карту</option><option value="cod">При получении</option></select></label>'
+   +'<label class="check"><input type="checkbox" id="oOk"><span>Согласен передать данные заказа мастеру (<a href="'+legal('privacy')+'" target="_blank" rel="noopener">политика</a>)</span></label>'
+   +'<button class="btn pri wide" data-act="placePrint" data-i="'+i+'">Отправить заявку</button>');
+}
+function placePrint(i){
+  const r=OFFERS,o=r&&r.list[i];if(!o)return;
+  if(!S.user){const n=($('#oName').value||'').trim();if(!n){toast('Укажи имя');return}S.name=n.slice(0,40)}
+  const del=$('#oDel').value,addr=($('#oAddr').value||'').trim();
+  if(del!=='pickup'&&!addr){toast('Укажи адрес доставки');return}
+  if(!$('#oOk').checked){toast('Нужно согласие на передачу данных мастеру');return}
+  const ord={no:newNo(),ts:Date.now(),kind:'print',master:o.m.id,req:{title:r.title,mat:r.mat,color:r.color,grams:r.grams,qty:r.qty,rush:r.rush,file:r.file},items:[{t:'Печать: '+r.title+' ('+r.mat+')',price:o.total,unit:'',q:1}],total:o.total,del,addr,pay:$('#oPay').value,note:r.note,status:'sent'};
+  S.orders.unshift(ord);save();
+  sendOrders([ord],'Приложи к сообщению STL-файл: продавец проверит модель, подтвердит цену и пришлёт реквизиты.');
+}
+async function previewSTL(f){
+  const c=$('#stl'),inf=$('#stlInfo');MESH=null;c.hidden=true;inf.textContent='';
+  if(!f)return;
+  if(!/\.stl$/i.test(f.name)){inf.textContent='Нужен файл STL';return}
+  if(f.size>50*1048576){inf.textContent='Файл больше 50 МБ, предпросмотр не строится. Отправь его мастеру в чат.';return}
+  inf.textContent='Читаю модель…';
+  try{
+    const buf=await f.arrayBuffer(),dv=new DataView(buf),n=buf.byteLength>=84?dv.getUint32(80,true):0;let T=[];
+    if(n>0&&buf.byteLength===84+n*50){for(let i=0;i<n;i++){const o=84+i*50+12,t=[];for(let k=0;k<9;k++)t.push(dv.getFloat32(o+k*4,true));T.push(t)}}
+    else{const txt=new TextDecoder().decode(buf),re=/vertex\s+(\S+)\s+(\S+)\s+(\S+)/g,v=[];let m;while((m=re.exec(txt)))v.push(+m[1],+m[2],+m[3]);for(let i=0;i+8<v.length;i+=9)T.push(v.slice(i,i+9))}
+    T=T.filter(t=>t.every(Number.isFinite));
+    if(!T.length){inf.textContent='Не удалось прочитать файл: нужен STL';return}
+    const mn=[1e30,1e30,1e30],mx=[-1e30,-1e30,-1e30];let vol=0;
+    T.forEach(t=>{for(let k=0;k<9;k++){const a=k%3;if(t[k]<mn[a])mn[a]=t[k];if(t[k]>mx[a])mx[a]=t[k]}vol+=(t[0]*(t[4]*t[8]-t[5]*t[7])-t[1]*(t[3]*t[8]-t[5]*t[6])+t[2]*(t[3]*t[7]-t[4]*t[6]))/6});
+    const d=[0,1,2].map(a=>mx[a]-mn[a]),cm3=Math.abs(vol)/1000,mat=CONFIG.materials[$('#pMat').value]||{density:1.24};
+    const g=Math.max(1,Math.round(cm3*mat.density*0.4)),step=Math.max(1,Math.ceil(T.length/6000));
+    MESH={t:T.filter((_,i)=>i%step===0),c:[0,1,2].map(a=>(mn[a]+mx[a])/2),size:Math.max(d[0],d[1],d[2])||1};
+    $('#pGrams').value=g;if(!$('#pTitle').value.trim())$('#pTitle').value=f.name.replace(/\.stl$/i,'').slice(0,80);
+    inf.textContent='Размер '+d.map(x=>Math.round(x)).join('×')+' мм, объём '+dec(cm3)+' см³. Вес примерно '+g+' г при заполнении около 40%, его можно поправить. Модель можно вращать пальцем.';
+    c.hidden=false;drawMesh();
+  }catch(e){inf.textContent='Не удалось прочитать файл'}
+}
+function drawMesh(){
+  const c=$('#stl'),M=MESH;if(!M)return;const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);
+  const cx=Math.cos(RX),sx=Math.sin(RX),cz=Math.cos(RZ),sz=Math.sin(RZ),k=Math.min(c.width,c.height)*0.82/M.size;
+  const dark=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()==='#0d131a';
+  const P=(x,y,z)=>{x-=M.c[0];y-=M.c[1];z-=M.c[2];const a=x*cz-y*sz,b=x*sz+y*cz;return[a,b*cx-z*sx,b*sx+z*cx]};
+  M.t.map(t=>{const a=P(t[0],t[1],t[2]),b=P(t[3],t[4],t[5]),d=P(t[6],t[7],t[8]);
+    const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=d[0]-a[0],vy=d[1]-a[1],vz=d[2]-a[2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,nl=Math.hypot(nx,ny,nz)||1;
+    return{p:[a,b,d],z:(a[1]+b[1]+d[1])/3,l:Math.abs(ny/nl)*0.7+Math.abs(nz/nl)*0.3}}).sort((p,q)=>q.z-p.z).forEach(t=>{
+    g.beginPath();t.p.forEach((q,i)=>{const X=c.width/2+q[0]*k,Y=c.height/2-q[2]*k;i?g.lineTo(X,Y):g.moveTo(X,Y)});g.closePath();
+    g.fillStyle=g.strokeStyle='hsl(330 '+(dark?60:66)+'% '+(dark?30+40*t.l:24+44*t.l)+'%)';g.fill();g.stroke()});
+}
+(function(){const c=$('#stl');let d=null;
+  c.addEventListener('pointerdown',e=>{d=[e.clientX,e.clientY];try{c.setPointerCapture(e.pointerId)}catch(_){}c.style.cursor='grabbing'});
+  c.addEventListener('pointermove',e=>{if(!d)return;RZ+=(e.clientX-d[0])*0.012;RX=Math.max(-0.2,Math.min(1.6,RX+(e.clientY-d[1])*0.012));d=[e.clientX,e.clientY];drawMesh()});
+  const up=()=>{d=null;c.style.cursor='grab'};c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up)})();
+
+/* ---------- калькулятор ---------- */
+const CM={w:'По весу',s:'По размеру',t:'По времени',f:'Полный расчёт'};
+function cv(){const v=id=>Math.max(0,+$(id).value||0);return{q:Math.max(1,Math.round(v('#cQ'))),g:v('#cG'),pg:v('#cPg'),l:v('#cL'),w:v('#cW'),h:v('#cH'),pv:v('#cPv'),t:v('#cT'),ph:v('#cPh'),pp:v('#cPp'),mk:v('#cMk'),pr:v('#cPr')}}
+function cprice(m,x){
+  const mat=x.g*x.pg,vol=x.l*x.w*x.h,size=vol*x.pv,time=x.t*x.ph;
+  const L=m==='w'?[['Пластик: '+dec(x.g)+' г × '+dec(x.pg)+' ₽',mat]]:m==='s'?[['Габарит: '+dec(vol)+' см³ × '+dec(x.pv)+' ₽',size]]:m==='t'?[['Печать: '+dec(x.t)+' ч × '+dec(x.ph)+' ₽',time]]:[['Пластик: '+dec(x.g)+' г × '+dec(x.pg)+' ₽',mat],['Печать: '+dec(x.t)+' ч × '+dec(x.ph)+' ₽',time]];
+  const base=L.reduce((a,l)=>a+l[1],0)+x.pp,mk=base*x.mk/100,unit=Math.round(base+mk);
+  return{L,mk,unit,total:unit*x.q+x.pr};
+}
+function recalc(){
+  const x=cv(),r=cprice(S.cmode,x);
+  document.querySelectorAll('#cModes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===S.cmode));
+  document.querySelectorAll('#calcForm [data-u]').forEach(e=>e.hidden=e.dataset.u.indexOf(S.cmode)<0);
+  const L=r.L.slice();if(x.pp)L.push(['Обработка и упаковка',x.pp]);if(x.mk)L.push(['Наценка '+dec(x.mk)+'%',r.mk]);
+  $('#calcRes').innerHTML='<div class="small muted">'+CM[S.cmode]+'</div><div class="big">'+rub(r.unit)+' <span class="small muted" style="font-weight:500">за 1 шт</span></div>'
+   +L.map(l=>'<div class="kv"><span>'+esc(l[0])+'</span><b>'+rub(l[1])+'</b></div>').join('')
+   +(x.q>1?'<div class="kv"><span>Количество</span><b>× '+x.q+'</b></div>':'')+(x.pr?'<div class="kv"><span>Подготовка</span><b>'+rub(x.pr)+'</b></div>':'')
+   +'<div class="kv" style="font-size:16px"><span><b>Итого за заказ</b></span><b>'+rub(r.total)+'</b></div>'
+   +'<div class="small muted" style="margin:12px 0 2px">Сравнение способов, за 1 шт</div>'
+   +Object.keys(CM).map(m=>'<button class="cmp" data-act="cmode" data-m="'+m+'" aria-pressed="'+(m===S.cmode)+'"><span>'+CM[m]+'</span><b>'+rub(cprice(m,x).unit)+'</b></button>').join('');
+}
+
+/* ---------- сообщество ---------- */
+function drawCommunity(){
+  $('#boards').innerHTML=CONFIG.boards.map(b=>b.url?'<a class="item" href="'+esc(b.url)+'" target="_blank" rel="noopener">'+esc(b.title)+'<span class="chev">›</span></a>':'<div class="item" style="display:flex;padding:13px 14px;border-bottom:1px solid var(--line)"><span style="font-weight:600">'+esc(b.title)+'</span><span class="small muted" style="margin-left:auto">скоро</span></div>').join('');
+  const R=BADGE_RULES;
+  $('#lvlVer').innerHTML=ICON.ver+'Документы проверены';$('#lvlRel').innerHTML=ICON.rel+'Надёжный мастер';$('#lvlTop').innerHTML=ICON.top+'Топ мастера';
+  $('#levels').innerHTML='<p style="margin:0 0 6px"><b>Документы проверены:</b> заполнен профиль, подтверждены контакты и статус самозанятого или ИП.</p>'
+   +'<p style="margin:0 0 6px"><b>Надёжный мастер:</b> '+R.reliable.orders+' завершённых заказа от '+R.reliable.buyers+' разных покупателей, нет проигранных споров за 30 дней, отчёты о печати ко всем заказам, ответ до '+R.reliable.responseHours+' ч. Отзывы не обязательны, но если они есть, средняя оценка от '+dec(R.reliable.minAvg)+'.</p>'
+   +'<p style="margin:0"><b>Топ мастера:</b> условия «Надёжного» плюс '+R.top.orders+' заказов и оценка от '+dec(R.top.minAvg)+'.</p>';
+  $('#plans').innerHTML=(CONFIG.plans||[]).map(p=>'<div class="card plan"><div class="row between"><b style="font-size:17px">'+esc(p.name)+'</b><span class="big">'+(p.price?rub(p.price)+' <span class="small muted" style="font-weight:500">в месяц</span>':'Бесплатно')+'</span></div><ul>'+p.perks.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'+(p.price?'<button class="btn pri wide" data-act="buyPlan" data-id="'+esc(p.id)+'">Подключить</button>':'<button class="btn wide" data-act="join">Начать бесплатно</button>')+'</div>').join('');
+  $('#extras').innerHTML=(CONFIG.extras||[]).map(x=>'<button class="item" data-act="buyExtra" data-id="'+esc(x.id)+'"><span style="flex:1"><span style="display:block">'+esc(x.name)+'</span><span class="small muted" style="font-weight:400">'+esc(x.text)+'</span></span><b style="white-space:nowrap">'+rub(x.price)+' <span class="small muted" style="font-weight:400">'+esc(x.unit)+'</span></b></button>').join('');
+  $('#tips').innerHTML=TIPS.map(t=>'<div class="card tip"><b>'+esc(t[0])+'</b><span class="small muted">'+esc(t[1])+'</span></div>').join('');
+}
+function openSellerReq(what,price,needCard){
+  openSheet(head(esc(what))
+   +'<p style="margin-top:0"><span class="big">'+esc(price)+'</span></p>'
+   +'<label class="field"><span>Имя продавца в каталоге</span><input class="input" id="srName" maxlength="40" value="'+esc(S.user?S.user.name:S.name)+'"></label>'
+   +(needCard?'<label class="field"><span>Какую карточку продвигать</span><input class="input" id="srCard" maxlength="80" placeholder="Название товара"></label>':'')
+   +'<label class="field"><span>Комментарий</span><input class="input" id="srNote" maxlength="200"></label>'
+   +'<button class="btn pri wide" data-act="sendSellerReq" data-what="'+esc(what)+'" data-price="'+esc(price)+'">Отправить заявку</button>'
+   +'<p class="small muted">Оплата после подтверждения, по реквизитам в сообщениях, с чеком.</p>');
+}
+function openJoin(){
+  openSheet(head('Стать мастером')
+   +'<p style="margin-top:0" class="small muted">Заполни анкету: мы проверим данные и добавим тебя в каталог.</p>'
+   +'<label class="field"><span>Имя или название мастерской</span><input class="input" id="jName" maxlength="40" value="'+esc(S.user?S.user.name:S.name)+'"></label>'
+   +'<div class="two"><label class="field"><span>Город</span><input class="input" id="jCity" maxlength="40" value="'+esc(S.user&&S.user.city||'')+'"></label><label class="field"><span>Статус</span><select id="jSt"><option>Самозанятый</option><option>ИП</option></select></label></div>'
+   +'<label class="field"><span>Принтеры</span><input class="input" id="jPr" maxlength="80" placeholder="Например, Bambu Lab A1, Ender-3"></label>'
+   +'<label class="field"><span>Материалы</span><input class="input" id="jMat" maxlength="80" placeholder="PLA, PETG"></label>'
+   +'<label class="field"><span>Ссылка на работы</span><input class="input" id="jUrl" maxlength="120" placeholder="Альбом ВКонтакте, сайт"></label>'
+   +'<label class="check"><input type="checkbox" id="jOk"><span>Подтверждаю, что выдаю чеки, не продаю запрещённые товары (<a href="'+legal('rules')+'" target="_blank" rel="noopener">правила</a>) и владею правами на свои модели</span></label>'
+   +'<button class="btn pri wide" data-act="sendJoin">Отправить анкету</button>');
+}
+function sendJoin(){
+  const v=id=>($(id).value||'').trim();
+  if(!v('#jName')||!v('#jCity')||!v('#jPr')){toast('Заполни имя, город и принтеры');return}
+  if(!$('#jOk').checked){toast('Подтверди условия');return}
+  sendFlow('Анкета готова',['Анкета мастера «'+CONFIG.brand+'»','Имя: '+v('#jName'),'Город: '+v('#jCity'),'Статус: '+$('#jSt').value,'Принтеры: '+v('#jPr'),'Материалы: '+(v('#jMat')||'—'),'Работы: '+(v('#jUrl')||'—')].join('\n'),'Текст анкеты скопирован. Открой чат с сообществом и отправь его: мы ответим и добавим тебя в каталог.');
+}
+
+/* ---------- профиль и заказы ---------- */
+function drawProfile(){
+  const u=S.user;
+  $('#me').innerHTML='<div class="ava" style="width:56px;height:56px;font-size:22px">'+(u&&u.photo?'<img src="'+esc(u.photo)+'" alt="">':esc((u?u.name:S.name||'Г').charAt(0)))+'</div><div style="min-width:0"><b style="font-size:17px">'+esc(u?u.name:(S.name||'Гость'))+'</b><div class="small muted">'+(u?'Вход через ВКонтакте'+(u.city?' · '+esc(u.city):''):'Открыто вне ВКонтакте: данные хранятся на этом устройстве')+'</div></div>';
+  $('#orders').innerHTML=S.orders.length?S.orders.map(orderCard).join(''):'<div class="card pad muted">Заказов пока нет. Выбери изделие в каталоге или закажи печать.</div>';
+  const fv=S.fav.map(id=>PROD[id]).filter(Boolean);
+  $('#favs').innerHTML=fv.length?'<div class="card pad">'+fv.map(p=>'<div class="mrow" data-act="prod" data-id="'+esc(p.id)+'" style="cursor:pointer">'+tile(p,'mini')+'<div style="flex:1;min-width:0"><b class="small">'+esc(p.title)+'</b><div class="small muted">'+fmtPrice(p)+'</div></div><span class="muted">›</span></div>').join('')+'</div>':'<div class="card pad muted">Нажми 🤍 на карточке, чтобы сохранить товар.</div>';
+  const op=CONFIG.operator;
+  $('#opInfo').innerHTML='Площадка размещения предложений. Оператор: '+esc(op.name)+(op.inn?', ИНН '+esc(op.inn):'')+', <a href="mailto:'+esc(op.email)+'">'+esc(op.email)+'</a>, сообщество <a href="https://vk.ru/'+esc(CONFIG.community.screen)+'" target="_blank" rel="noopener">vk.ru/'+esc(CONFIG.community.screen)+'</a>. Продавцы самостоятельно отвечают за товары и услуги; площадка не принимает платежи и не является стороной договора.';
+}
+function orderCard(o){
+  const m=MAST[o.master]||{name:o.master},step={sent:1,paid:2,received:3}[o.status]||0;
+  let act='';
+  if(o.status==='sent')act='<button class="btn sm" data-act="resend" data-no="'+esc(o.no)+'">Отправить ещё раз</button><button class="btn sm pri" data-act="ost" data-v="paid" data-no="'+esc(o.no)+'">Я оплатил</button><button class="btn sm" data-act="cancel" data-no="'+esc(o.no)+'">Отменить</button>';
+  else if(o.status==='paid')act='<button class="btn sm pri" data-act="ost" data-v="received" data-no="'+esc(o.no)+'">Получил заказ</button><button class="btn sm" data-act="problem" data-no="'+esc(o.no)+'">Проблема</button>';
+  else if(o.status==='received')act=(o.reviewed?'<span class="small muted">Отзыв отправлен, спасибо!</span>':'<button class="btn sm pri" data-act="review" data-no="'+esc(o.no)+'">Оставить отзыв</button>')+'<button class="btn sm" data-act="problem" data-no="'+esc(o.no)+'">Проблема</button>';
+  else if(o.status==='problem')act='<button class="btn sm" data-act="ost" data-v="'+esc(o.prev||'paid')+'" data-no="'+esc(o.no)+'">Вопрос решён</button>';
+  return '<div class="card pad" style="margin-bottom:10px"><div class="row between"><b>'+esc(o.no)+'</b><span class="bdg '+(o.status==='received'?'b-rel':o.status==='problem'?'b-top':o.status==='cancelled'?'b-new':'b-ver')+'">'+STATUS[o.status]+'</span></div>'
+   +(step?'<div class="steps">'+[1,2,3].map(i=>'<i class="'+(i<=step?'on':'')+'"></i>').join('')+'</div>':'')
+   +'<div class="small muted">'+fdate(o.ts)+' · '+esc(m.name)+' · '+DEL[o.del]+' · '+PAY[o.pay]+'</div>'
+   +o.items.map(i=>'<div class="kv"><span>'+esc(i.t)+(i.q>1?' × '+i.q:'')+'</span><b>'+rub(i.price*i.q)+'</b></div>').join('')
+   +'<div class="kv"><span><b>Итого</b></span><b>'+rub(o.total)+'</b></div>'
+   +(act?'<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">'+act+'</div>':'')+'</div>';
+}
+const findOrder=no=>S.orders.find(o=>o.no===no);
+function setStatus(no,st){const o=findOrder(no);if(!o)return;if(st==='problem')o.prev=o.status;o.status=st;save();drawProfile()}
+function openReview(no){
+  const o=findOrder(no);if(!o)return;
+  openSheet(head('Отзыв о заказе')
+   +'<p class="small muted" style="margin-top:0">Отзыв уйдёт продавцу. После проверки он появится в карточке. Фото можно приложить в чате.</p>'
+   +'<div class="seg" id="stars" role="radiogroup" aria-label="Оценка">'+[1,2,3,4,5].map(n=>'<button data-act="star" data-v="'+n+'" aria-pressed="'+(n===5)+'">'+n+' ★</button>').join('')+'</div>'
+   +'<label class="field" style="margin-top:12px"><span>Что понравилось или нет</span><textarea id="rvT" maxlength="500"></textarea></label>'
+   +'<button class="btn pri wide" data-act="sendReview" data-no="'+esc(no)+'">Отправить отзыв</button>');
+}
+function sendReview(no){
+  const o=findOrder(no);if(!o)return;
+  const st=+((document.querySelector('#stars [aria-pressed="true"]')||{}).dataset||{}).v||5,t=($('#rvT').value||'').trim();
+  if(!t){toast('Напиши пару слов');return}
+  o.reviewed=true;save();drawProfile();
+  sendFlow('Отзыв готов',['Отзыв к заказу '+o.no+' («'+CONFIG.brand+'»)','Мастер: '+((MAST[o.master]||{}).name||o.master),'Оценка: '+'★'.repeat(st)+' ('+st+' из 5)',t,'Автор: '+buyerName()].join('\n'),'Текст отзыва скопирован. Отправь его в чат сообщества, можно с фото изделия.');
+}
+function openProblem(no){
+  const o=findOrder(no);if(!o)return;
+  openSheet(head('Проблема с заказом')
+   +'<label class="field"><span>Что случилось</span><select id="prR"><option>Изделие не соответствует описанию</option><option>Брак или повреждение</option><option>Заказ не пришёл вовремя</option><option>Мастер не отвечает</option><option>Другое</option></select></label>'
+   +'<label class="field"><span>Подробности</span><textarea id="prT" maxlength="500"></textarea></label>'
+   +'<p class="small muted">Сначала сообщение уйдёт продавцу. Если он не отвечает или вы не договорились, напиши в сообщество площадки: мы можем скрыть его карточки. Деньги площадка не принимает, поэтому возврат делает продавец.</p>'
+   +'<button class="btn pri wide" data-act="sendProblem" data-no="'+esc(no)+'">Сообщить</button>');
+}
+
+/* ---------- юридические ссылки ---------- */
+function legal(a){return CONFIG.legalUrl+'#'+a}
+function bindLegal(){document.querySelectorAll('[data-legal]').forEach(a=>a.href=legal(a.dataset.legal))}
+
+/* ---------- онбординг и согласие ---------- */
+const SLIDES=[
+  ['🖨️','Изделия и печать на заказ','Готовые вещи от мастеров и печать по твоему файлу. Цену считаем по тарифам мастеров.'],
+  ['🛡️','Проверенные мастера','Бейджи показывают, кто прошёл проверку документов и стабильно выполняет заказы.'],
+  ['🤝','Сделка напрямую с продавцом','Площадка только размещает предложения. Заказ уходит продавцу в личные сообщения, ты платишь ему и получаешь чек.']
+];
+let slide=0;
+function drawOnb(){
+  const s=SLIDES[slide],last=slide===SLIDES.length-1;
+  $('#onbin').innerHTML='<div class="slide"><div class="art" aria-hidden="true">'+s[0]+'</div><h2>'+s[1]+'</h2><p class="muted">'+s[2]+'</p></div>'
+   +'<div class="dots" aria-hidden="true">'+SLIDES.map((_,i)=>'<i class="'+(i===slide?'on':'')+'"></i>').join('')+'</div>'
+   +(last?'<label class="check"><input type="checkbox" id="cOk"><span>Принимаю <a href="'+legal('terms')+'" target="_blank" rel="noopener">соглашение</a> и даю согласие на обработку данных по <a href="'+legal('privacy')+'" target="_blank" rel="noopener">политике конфиденциальности</a></span></label><button class="btn pri wide" data-act="onbDone" id="onbGo" disabled>Начать</button>'
+     :'<div class="two"><button class="btn" data-act="onbSkip">Пропустить</button><button class="btn pri" data-act="onbNext">Далее</button></div>');
+  const c=$('#cOk');if(c)c.addEventListener('change',()=>$('#onbGo').disabled=!c.checked);
+}
+function showOnb(){slide=S.onb?SLIDES.length-1:0;drawOnb();const d=$('#onb');if(!d.open)d.showModal()}
+$('#onb').addEventListener('cancel',e=>e.preventDefault());
+
+/* ---------- действия ---------- */
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,id=el.dataset.id,no=el.dataset.no;
+  if(a!=='prod'&&el.tagName!=='A')e.preventDefault();
+  if(el.closest('.prod')&&a!=='prod')e.stopPropagation();
+  switch(a){
+    case 'tab':closeSheet();setTab(el.dataset.v);break;
+    case 'close':closeSheet();break;
+    case 'type':S.type=el.dataset.v;drawCatalog();break;
+    case 'filters':openFilters();break;
+    case 'fApply':S.mat=$('#fMat').value;S.city=$('#fCity').value;S.maxPrice=Math.max(0,+$('#fMax').value||0);S.trusted=$('#fTr').checked;closeSheet();drawCatalog();break;
+    case 'fReset':S.mat=S.city='';S.maxPrice=0;S.trusted=false;closeSheet();drawCatalog();break;
+    case 'prod':openProduct(id);break;
+    case 'master':openMaster(id);break;
+    case 'fav':{const i=S.fav.indexOf(id);if(i>=0)S.fav.splice(i,1);else S.fav.push(id);save();drawCatalog();if(sheet.open&&el.closest('#sheet'))openProduct(id);toast(i>=0?'Убрано из избранного':'Добавлено в избранное');break}
+    case 'add':addToCart(id);break;
+    case 'cart':openCart();break;
+    case 'inc':S.cart[id]=(S.cart[id]||0)+1;save();drawCartCnt();openCart();break;
+    case 'dec':S.cart[id]=(S.cart[id]||0)-1;if(S.cart[id]<1)delete S.cart[id];save();drawCartCnt();openCart();break;
+    case 'goCatalog':closeSheet();setTab('catalog');break;
+    case 'checkout':openCheckout();break;
+    case 'placeOrder':placeOrder();break;
+    case 'copyOne':{const t=MSGS[+el.dataset.i];toast((await copyText(t||''))?'Текст скопирован':'Не удалось скопировать');break}
+    case 'copyMsg':toast((await copyText(lastMsg))?'Текст скопирован':'Не удалось скопировать, выдели текст вручную');break;
+    case 'share':shareProduct(id);break;
+    case 'report':{const p=PROD[id];sendFlow('Жалоба на карточку',['Жалоба на карточку «'+(p?p.title:id)+'» ('+id+')','Мастер: '+(p?MAST[p.master].name:'—'),'Причина: ','Отправитель: '+buyerName()].join('\n'),'Текст жалобы скопирован. Допиши причину и отправь в чат сообщества.');break}
+    case 'printWith':{closeSheet();setTab('print');$('#pMaster').value=id;const mm=MAST[id];if(mm&&mm.materials&&mm.materials[0])$('#pMat').value=mm.materials[0];break}
+    case 'offers':calcOffers();break;
+    case 'takeOffer':takeOffer(+el.dataset.i);break;
+    case 'placePrint':placePrint(+el.dataset.i);break;
+    case 'cmode':S.cmode=el.dataset.m;recalc();break;
+    case 'join':openJoin();break;
+    case 'buyPlan':{const p=PLAN[id];if(!p)break;openSellerReq('Тариф «'+p.name+'»',rub(p.price)+' в месяц',true);break}
+    case 'buyExtra':{const x=(CONFIG.extras||[]).find(e=>e.id===id);if(!x)break;openSellerReq(x.name,rub(x.price)+' '+x.unit,x.id==='promo');break}
+    case 'sendSellerReq':{const v=k=>($(k).value||'').trim();if(!v('#srName')){toast('Укажи имя продавца');break}
+      sendFlow('Заявка готова',['Заявка продавца «'+CONFIG.brand+'»','Услуга: '+el.dataset.what+' ('+el.dataset.price+')','Продавец: '+v('#srName'),$('#srCard')&&v('#srCard')?'Карточка: '+v('#srCard'):'',v('#srNote')?'Комментарий: '+v('#srNote'):''].filter(Boolean).join('\n'),'Текст заявки скопирован. Отправь его в сообщество площадки: пришлём реквизиты и чек, после оплаты подключим услугу.');break}
+    case 'sendJoin':sendJoin();break;
+    case 'ost':setStatus(no,el.dataset.v);toast('Статус обновлён');break;
+    case 'resend':{const o=findOrder(no);if(o)sendOrders([o]);break}
+    case 'cancel':{const o=findOrder(no);if(!o)break;o.status='cancelled';save();drawProfile();sendOrders([o],'',['Отменяю заказ '+o.no+'.\nПокупатель: '+buyerName()],'Отмена заказа');break}
+    case 'review':openReview(no);break;
+    case 'star':document.querySelectorAll('#stars button').forEach(b=>b.setAttribute('aria-pressed',b===el));break;
+    case 'sendReview':sendReview(no);break;
+    case 'problem':openProblem(no);break;
+    case 'sendProblem':{const o=findOrder(no);if(!o)break;const r=$('#prR').value,t=($('#prT').value||'').trim();setStatus(no,'problem');sendOrders([o],'Если продавец не ответит за 2 дня, перешли этот текст в сообщество площадки.',[['Проблема с заказом '+o.no,'Мастер: '+((MAST[o.master]||{}).name||''),'Причина: '+r,t?'Подробности: '+t:'','Покупатель: '+buyerName()].filter(Boolean).join('\n')],'Сообщи продавцу о проблеме');break}
+    case 'allowMsg':vkAction('VKWebAppAllowMessagesFromGroup',{group_id:+CONFIG.community.id},'Продавец сможет писать тебе в личные сообщения',true);break;
+    case 'joinGroup':vkAction('VKWebAppJoinGroup',{group_id:+CONFIG.community.id},'Ты подписан на сообщество',true);break;
+    case 'homeScreen':vkAction('VKWebAppAddToHomeScreen',{},'Иконка добавлена на главный экран');break;
+    case 'shareApp':shareApp();break;
+    case 'wipe':openSheet(head('Удалить мои данные')+'<p style="margin-top:0">Удалим историю заказов, корзину, избранное и согласие на этом устройстве и в хранилище ВКонтакте. Сообщения в чатах сообщества останутся, их можно удалить в самом ВКонтакте.</p><div class="two"><button class="btn" data-act="close">Отмена</button><button class="btn pri" data-act="wipeYes">Удалить</button></div>');break;
+    case 'wipeYes':await Store.clear('acct');Object.assign(S,{cart:{},fav:[],orders:[],consent:false,onb:false,name:''});closeSheet();drawCartCnt();drawCatalog();drawProfile();toast('Данные удалены');setTimeout(showOnb,400);break;
+    case 'onbNext':slide=Math.min(SLIDES.length-1,slide+1);drawOnb();break;
+    case 'onbSkip':slide=SLIDES.length-1;drawOnb();break;
+    case 'onbDone':if(!$('#cOk').checked)break;S.consent=true;S.onb=true;save();$('#onb').close();handleHash();break;
+  }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='oDel'){$('#oAddrF').hidden=e.target.value==='pickup'}
+  if(e.target.id==='pFile'){previewSTL(e.target.files[0])}
+  if(e.target.id==='sort'){S.sort=e.target.value;drawCatalog()}
+  if(e.target.id==='cMat'){const p=CONFIG.materials[e.target.value];if(p)$('#cPg').value=p.price;recalc()}
+});
+$('#q').addEventListener('input',e=>{S.q=e.target.value;drawCatalog()});
+$('#calcForm').addEventListener('input',e=>{if(e.target.id==='cPg')$('#cMat').value='';recalc()});
+
+async function vkAction(method,params,okText,needGroup){
+  if(!B.ok){toast('Работает внутри приложения ВКонтакте');return}
+  if(needGroup&&!CONFIG.community.id){toast('Сообщество ещё не настроено владельцем');return}
+  try{await B.send(method,params);toast(okText)}catch(e){toast('Действие отменено или недоступно на этом устройстве')}
+}
+async function shareProduct(id){
+  const p=PROD[id];if(!p)return;
+  const link=B.ok&&LP.vk_app_id?'https://vk.com/app'+LP.vk_app_id+'#p='+encodeURIComponent(id):location.href.split('#')[0]+'#p='+encodeURIComponent(id);
+  if(B.ok){try{await B.send('VKWebAppShare',{link});return}catch(e){}}
+  if(navigator.share){try{await navigator.share({title:p.title,url:link});return}catch(e){}}
+  toast((await copyText(link))?'Ссылка скопирована':'Не удалось поделиться');
+}
+async function shareApp(){
+  const link=LP.vk_app_id?'https://vk.com/app'+LP.vk_app_id:location.href.split('#')[0];
+  if(B.ok){try{await B.send('VKWebAppShare',{link});return}catch(e){}}
+  toast((await copyText(link))?'Ссылка скопирована':'Не удалось поделиться');
+}
+function handleHash(){const h=location.hash.replace(/^#/,''),m=/^(p|m)=(.+)$/.exec(h);if(!m)return;const v=decodeURIComponent(m[2]);if(m[1]==='p'&&PROD[v])openProduct(v);if(m[1]==='m'&&MAST[v])openMaster(v)}
+
+/* ---------- запуск ---------- */
+(async function start(){
+  $('#brand').textContent=CONFIG.brand;document.title=CONFIG.brand;
+  $('#demoBar').hidden=!DEMO;
+  $('#cMat').innerHTML='<option value="">Своя цена</option>'+Object.keys(CONFIG.materials).map(k=>'<option'+(k==='PLA'?' selected':'')+'>'+esc(k)+'</option>').join('');
+  fillPrintSelects();bindLegal();drawHero();drawCatalog();drawCartCnt();setTab('catalog');
+  await B.init();
+  if(B.ok){try{const u=await timeout(B.send('VKWebAppGetUserInfo'),4000);if(u&&u.id)S.user={id:u.id,name:((u.first_name||'')+' '+(u.last_name||'')).trim()||'Покупатель',photo:u.photo_100||'',city:u.city&&u.city.title||''}}catch(e){}}
+  const d=await Store.get('acct');
+  if(d){S.cart=d.cart&&typeof d.cart==='object'?d.cart:{};S.fav=Array.isArray(d.fav)?d.fav:[];S.orders=Array.isArray(d.orders)?d.orders.filter(o=>o&&o.no&&STATUS[o.status]&&Array.isArray(o.items)):[];S.consent=!!d.consent;S.onb=!!d.onb;S.name=d.name||''}
+  drawCatalog();drawCartCnt();if(S.tab==='profile')drawProfile();
+  if(!S.consent)showOnb();else handleHash();
+})();
+</script>
+</body>
+</html>
