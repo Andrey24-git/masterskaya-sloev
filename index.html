@@ -344,7 +344,9 @@ const CONFIG={
   // Адрес страницы с документами (лежит рядом с приложением)
   legalUrl:'legal.html',
   // true: показывать демо-товары и баннер. Перед запуском поставь false и заполни masters и products своими данными.
-  demo:true,
+  demo:false,
+  // Акция для первых продавцов (пустая строка — не показывать)
+  launchPromo:'Первым 20 мастерам — тариф «Про» бесплатно 3 месяца',
   // Средняя скорость печати, г/ч (для оценки времени в заказе печати)
   printSpeed:12,
   // Материалы: цена за грамм по умолчанию и плотность (для оценки веса по STL)
@@ -431,6 +433,7 @@ const ICON={
 };
 
 /* ---------- данные ---------- */
+if(!CONFIG.demo){CONFIG.masters=CONFIG.masters.filter(m=>m.real);CONFIG.products=CONFIG.products.filter(p=>p.real);CONFIG.reviews=CONFIG.reviews.filter(r=>r.real)}
 const MAST={};CONFIG.masters.forEach(m=>MAST[m.id]=m);
 const DEMO=!!CONFIG.demo;
 const PLAN={};(CONFIG.plans||[]).forEach(p=>PLAN[p.id]=p);
@@ -565,9 +568,11 @@ function drawCatalog(){
   const n=(S.mat?1:0)+(S.city?1:0)+(S.maxPrice?1:0)+(S.trusted?1:0);
   $('#fltBtn').textContent=n?'Фильтры · '+n:'Фильтры';
   const r=filtered();
-  $('#grid').innerHTML=r.length?r.map(card).join(''):'<div class="empty">'+(PRODUCTS.length?'Ничего не нашлось. Попробуй другой запрос или сбрось фильтры.':'Каталог пока пуст. Скоро здесь появятся изделия мастеров.')+'</div>';
+  $('#grid').innerHTML=r.length?r.map(card).join(''):'<div class="empty">'+(PRODUCTS.length?'Ничего не нашлось. Попробуй другой запрос или сбрось фильтры.':'')+'</div>';
+  if(!PRODUCTS.length)$('#grid').innerHTML='<div class="card pad" style="grid-column:1/-1;text-align:center"><div style="font-size:46px" aria-hidden="true">🧱</div><h2 style="margin:6px 0 4px;font-size:20px">Площадка только открылась</h2><p class="muted" style="margin:0 0 12px">Мы набираем первых мастеров. Нужно что-то напечатать уже сейчас? Оставь заявку: подберём мастера и напишем тебе.</p>'+(CONFIG.launchPromo?'<p class="bdg b-top" style="display:inline-flex;white-space:normal;text-align:center;margin:0 0 12px">'+esc(CONFIG.launchPromo)+'</p>':'')+'<div class="two"><button class="btn pri" data-act="tab" data-v="print">Заказать печать</button><button class="btn" data-act="join">Стать мастером</button></div></div>';
 }
 function drawHero(){
+  if(!CONFIG.masters.length){$('#heroStats').innerHTML='<span>Набираем первых мастеров</span>'+(CONFIG.launchPromo?'<span>'+esc(CONFIG.launchPromo)+'</span>':'');return}
   const cities=new Set(CONFIG.masters.map(m=>m.city));
   $('#heroStats').innerHTML='<span>'+CONFIG.masters.length+' '+plural(CONFIG.masters.length,'мастер','мастера','мастеров')+'</span><span>'+PRODUCTS.length+' '+plural(PRODUCTS.length,'предложение','предложения','предложений')+'</span><span>'+cities.size+' '+plural(cities.size,'город','города','городов')+'</span>';
 }
@@ -719,7 +724,7 @@ function calcOffers(){
   }).sort((a,b)=>a.total-b.total);
   OFFERS={title,mat,color:$('#pColor').value.trim(),grams:Math.round(grams),qty,rush,note:$('#pNote').value.trim(),file:($('#pFile').files[0]||{}).name||'',list};
   const box=$('#offers');
-  if(!list.length){box.innerHTML='<div class="card pad" style="margin-top:12px"><b>Нет мастеров с материалом '+esc(mat)+'</b><p class="muted small" style="margin:6px 0 0">Выбери другой материал или «Любой подходящий» мастер.</p></div>';box.scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(!list.length){box.innerHTML='<div class="card pad" style="margin-top:12px"><b>'+(CONFIG.masters.length?'Нет мастеров с материалом '+esc(mat):'Подберём мастера для тебя')+'</b><p class="muted small" style="margin:6px 0 10px">Отправь заявку в сообщество площадки: мы найдём мастера с нужным принтером и материалом, и он напишет тебе сам.</p><button class="btn pri wide" data-act="reqCommunity">Отправить заявку</button></div>';box.scrollIntoView({behavior:'smooth',block:'start'});return}
   box.innerHTML='<h2 class="sec">Предложения</h2><p class="small muted" style="margin-top:-4px">Оценка по тарифам мастеров. Точную цену мастер подтвердит после проверки модели.</p>'
    +list.map((o,i)=>{const s=o.m.stats||{};return '<div class="card pad offer"><div class="row"><div class="ava">'+esc(o.m.name.charAt(0))+'</div><div style="flex:1;min-width:0"><b>'+esc(o.m.name)+'</b> '+badgeIcons(o.m)+'<div class="small muted">'+esc(o.m.city)+' · '+(s.ratingCount?'★ '+dec(s.ratingAvg):'нет отзывов')+' · отвечает до '+(s.responseHours!=null?s.responseHours:'—')+' ч</div></div><div style="text-align:right"><div class="price">'+rub(o.total)+'</div><div class="small muted">'+o.days+' '+plural(o.days,'день','дня','дней')+'</div></div></div>'
      +'<div class="two" style="margin-top:10px"><button class="btn sm" data-act="master" data-id="'+esc(o.m.id)+'">О мастере</button><button class="btn pri sm" data-act="takeOffer" data-i="'+i+'">Выбрать</button></div></div>'}).join('');
@@ -829,7 +834,7 @@ function openSellerReq(what,price,needCard){
 }
 function openJoin(){
   openSheet(head('Стать мастером')
-   +'<p style="margin-top:0" class="small muted">Заполни анкету: мы проверим данные и добавим тебя в каталог.</p>'
+   +'<p style="margin-top:0" class="small muted">Заполни анкету: мы проверим данные и добавим тебя в каталог.</p>'+(CONFIG.launchPromo?'<p class="bdg b-top" style="display:inline-flex;white-space:normal;text-align:center;margin:0 0 12px">'+esc(CONFIG.launchPromo)+'</p>':'')
    +'<label class="field"><span>Имя или название мастерской</span><input class="input" id="jName" maxlength="40" value="'+esc(S.user?S.user.name:S.name)+'"></label>'
    +'<div class="two"><label class="field"><span>Город</span><input class="input" id="jCity" maxlength="40" value="'+esc(S.user&&S.user.city||'')+'"></label><label class="field"><span>Статус</span><select id="jSt"><option>Самозанятый</option><option>ИП</option></select></label></div>'
    +'<label class="field"><span>Принтеры</span><input class="input" id="jPr" maxlength="80" placeholder="Например, Bambu Lab A1, Ender-3"></label>'
@@ -950,6 +955,7 @@ document.addEventListener('click',async e=>{
     case 'placePrint':placePrint(+el.dataset.i);break;
     case 'cmode':S.cmode=el.dataset.m;recalc();break;
     case 'join':openJoin();break;
+    case 'reqCommunity':{const r=OFFERS;if(!r)break;sendFlow('Заявка на печать',['Заявка на печать через «'+CONFIG.brand+'»','Что печатаем: '+r.title,'Материал: '+r.mat+(r.color?', цвет: '+r.color:''),'Вес детали: ~'+r.grams+' г, количество: '+r.qty+(r.rush?', срочно':''),r.file?'Файл: '+r.file+' (пришлю в этот чат)':'Файла пока нет',r.note?'Комментарий: '+r.note:'','Покупатель: '+buyerName()].filter(Boolean).join('\n'),'Текст заявки скопирован. Отправь его в сообщество площадки и приложи STL, если есть: мы подберём мастера.');break}
     case 'buyPlan':{const p=PLAN[id];if(!p)break;openSellerReq('Тариф «'+p.name+'»',rub(p.price)+' в месяц',true);break}
     case 'buyExtra':{const x=(CONFIG.extras||[]).find(e=>e.id===id);if(!x)break;openSellerReq(x.name,rub(x.price)+' '+x.unit,x.id==='promo');break}
     case 'sendSellerReq':{const v=k=>($(k).value||'').trim();if(!v('#srName')){toast('Укажи имя продавца');break}
