@@ -164,8 +164,8 @@ footer.legal{font-size:12px;color:var(--muted);padding:18px 0 8px}
 <!-- КАТАЛОГ -->
 <section id="v-catalog" data-view>
   <div class="hero">
-    <h1 id="heroTitle">Печать, которую делают люди рядом</h1>
-    <p id="heroText">Площадка, где мастера 3D-печати размещают изделия и услуги. Заказ и оплата напрямую продавцу.</p>
+    <h1 id="heroTitle">3D-печать от мастеров со всей России</h1>
+    <p id="heroText">Площадка, где мастера 3D-печати размещают изделия и услуги. Мастера сами отправляют заказы по всей России, заказ и оплата напрямую мастеру.</p>
     <div class="stats" id="heroStats"></div>
   </div>
   <label class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Подставка, миниатюры, PETG…" aria-label="Поиск по каталогу" enterkeyhint="search"></label>
@@ -279,7 +279,7 @@ footer.legal{font-size:12px;color:var(--muted);padding:18px 0 8px}
       <span class="bdg b-ver" id="lvlVer"></span><span class="bdg b-rel" id="lvlRel"></span><span class="bdg b-top" id="lvlTop"></span>
     </div>
     <div id="levels" class="small"></div>
-    <button class="btn pri wide" data-act="join" style="margin-top:12px">Стать мастером</button>
+    <button class="btn pri wide" data-act="join" style="margin-top:12px">Разместить свои услуги</button>
   </div>
   <h2 class="sec">Тарифы для продавцов</h2>
   <div id="plans"></div>
@@ -388,7 +388,7 @@ const CONFIG={
   // Тарифы для продавцов. limit: сколько карточек показывается в каталоге (0 = без ограничения)
   plans:[
     {id:'free',name:'Старт',price:0,limit:3,perks:['До 3 карточек в каталоге','Заказы в личные сообщения','Участие в бейджах']},
-    {id:'master',name:'Мастер',price:300,limit:15,perks:['До 15 карточек','Значок тарифа в профиле','Приоритет в поиске по городу']},
+    {id:'master',name:'Мастер',price:300,limit:15,perks:['До 15 карточек','Значок тарифа в профиле','Выше в поиске']},
     {id:'pro',name:'Про',price:500,limit:0,perks:['Без ограничения карточек','1 неделя продвижения в месяц','Пост о мастере в сообществе раз в квартал']}
   ],
   // Разовые услуги для продавцов
@@ -569,10 +569,10 @@ function drawCatalog(){
   $('#fltBtn').textContent=n?'Фильтры · '+n:'Фильтры';
   const r=filtered();
   $('#grid').innerHTML=r.length?r.map(card).join(''):'<div class="empty">'+(PRODUCTS.length?'Ничего не нашлось. Попробуй другой запрос или сбрось фильтры.':'')+'</div>';
-  if(!PRODUCTS.length)$('#grid').innerHTML='<div class="card pad" style="grid-column:1/-1;text-align:center"><div style="font-size:46px" aria-hidden="true">🧱</div><h2 style="margin:6px 0 4px;font-size:20px">Площадка только открылась</h2><p class="muted" style="margin:0 0 12px">Мы набираем первых мастеров. Нужно что-то напечатать уже сейчас? Оставь заявку: подберём мастера и напишем тебе.</p>'+(CONFIG.launchPromo?'<p class="bdg b-top" style="display:inline-flex;white-space:normal;text-align:center;margin:0 0 12px">'+esc(CONFIG.launchPromo)+'</p>':'')+'<div class="two"><button class="btn pri" data-act="tab" data-v="print">Заказать печать</button><button class="btn" data-act="join">Стать мастером</button></div></div>';
+  if(!PRODUCTS.length)$('#grid').innerHTML='<div class="card pad" style="grid-column:1/-1;text-align:center"><div style="font-size:46px" aria-hidden="true">🧱</div><h2 style="margin:6px 0 4px;font-size:20px">Здесь появятся предложения мастеров</h2><p class="muted" style="margin:0 0 12px">Мастера 3D-печати сами размещают здесь изделия и услуги и принимают заказы напрямую. Нужно напечатать уже сейчас? Опиши задачу в обсуждении «Ищу мастера или модель»: мастера откликнутся сами.</p>'+(CONFIG.launchPromo?'<p class="bdg b-top" style="display:inline-flex;white-space:normal;text-align:center;margin:0 0 12px">'+esc(CONFIG.launchPromo)+'</p>':'')+'<div class="two"><button class="btn pri" data-act="tab" data-v="print">Заказать печать</button><button class="btn" data-act="join">Разместить услуги</button></div></div>';
 }
 function drawHero(){
-  if(!CONFIG.masters.length){$('#heroStats').innerHTML='<span>Набираем первых мастеров</span>'+(CONFIG.launchPromo?'<span>'+esc(CONFIG.launchPromo)+'</span>':'');return}
+  if(!CONFIG.masters.length){$('#heroStats').innerHTML='<span>Размещение для мастеров открыто</span>'+(CONFIG.launchPromo?'<span>'+esc(CONFIG.launchPromo)+'</span>':'');return}
   const cities=new Set(CONFIG.masters.map(m=>m.city));
   $('#heroStats').innerHTML='<span>'+CONFIG.masters.length+' '+plural(CONFIG.masters.length,'мастер','мастера','мастеров')+'</span><span>'+PRODUCTS.length+' '+plural(PRODUCTS.length,'предложение','предложения','предложений')+'</span><span>'+cities.size+' '+plural(cities.size,'город','города','городов')+'</span>';
 }
@@ -637,8 +637,8 @@ function openCheckout(){
   const L=cartLines();if(!L.length)return;
   openSheet(head('Оформление')
    +(S.user?'':'<label class="field"><span>Как к тебе обращаться</span><input class="input" id="oName" maxlength="40" value="'+esc(S.name)+'" placeholder="Имя"></label>')
-   +'<label class="field"><span>Получение</span><select id="oDel"><option value="pickup">Самовывоз у мастера</option><option value="post">Доставка (СДЭК, Почта и т. п.)</option><option value="courier">Курьер по городу</option></select></label>'
-   +'<label class="field" id="oAddrF" hidden><span>Город и адрес или пункт выдачи</span><input class="input" id="oAddr" maxlength="160" placeholder="Город, улица, дом или адрес пункта выдачи"></label>'
+   +'<label class="field"><span>Получение</span><select id="oDel"><option value="post">Доставка (СДЭК, Почта и т. п.)</option><option value="pickup">Самовывоз у мастера</option><option value="courier">Курьер по городу</option></select></label>'
+   +'<label class="field" id="oAddrF"><span>Город и адрес или пункт выдачи</span><input class="input" id="oAddr" maxlength="160" placeholder="Город, улица, дом или адрес пункта выдачи"></label>'
    +'<label class="field"><span>Оплата мастеру</span><select id="oPay"><option value="sbp">Перевод по СБП</option><option value="card">Перевод на карту</option><option value="cod">При получении</option></select></label>'
    +'<label class="field"><span>Комментарий</span><textarea id="oNote" maxlength="400" placeholder="Цвет, сроки, пожелания"></textarea></label>'
    +'<label class="check"><input type="checkbox" id="oOk"><span>Согласен передать данные заказа мастеру для его исполнения (<a href="'+legal('privacy')+'" target="_blank" rel="noopener">политика</a>)</span></label>'
@@ -679,16 +679,16 @@ async function copyText(t){
 }
 const chatUrl=()=>CONFIG.community.screen?'https://vk.me/'+encodeURIComponent(CONFIG.community.screen):(CONFIG.community.id?'https://vk.me/club'+CONFIG.community.id:'');
 let lastMsg='';
-async function sendFlow(title,text,intro){
+async function sendFlow(title,text,intro,url,label){
   lastMsg=text;const ok=await copyText(text);
   if(B.ok&&CONFIG.community.id){try{await B.send('VKWebAppAllowMessagesFromGroup',{group_id:+CONFIG.community.id})}catch(e){}}
-  const u=chatUrl();
+  const u=url||chatUrl();
   openSheet(head(title)
    +'<p style="margin-top:0">'+esc(intro)+'</p>'
    +(ok?'':'<p class="small" style="color:var(--warn)">Скопировать автоматически не получилось. Нажми «Скопировать текст».</p>')
    +'<pre class="msg">'+esc(text)+'</pre>'
    +'<div class="two"><button class="btn" data-act="copyMsg">Скопировать текст</button>'
-   +(u?'<a class="btn pri" href="'+esc(u)+'" target="_blank" rel="noopener">Открыть чат</a>':'<button class="btn pri" disabled>Чат не настроен</button>')+'</div>'
+   +(u?'<a class="btn pri" href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(label||'Открыть чат')+'</a>':'<button class="btn pri" disabled>Чат не настроен</button>')+'</div>'
    +(u?'':'<p class="small muted">Владелец приложения ещё не указал сообщество для заказов (раздел CONFIG.community).</p>')
    +'<p class="small muted">ВКонтакте не разрешает приложениям отправлять сообщения от твоего имени, поэтому вставить текст нужно вручную.</p>');
   $('#shin').dataset.k='send';
@@ -724,7 +724,7 @@ function calcOffers(){
   }).sort((a,b)=>a.total-b.total);
   OFFERS={title,mat,color:$('#pColor').value.trim(),grams:Math.round(grams),qty,rush,note:$('#pNote').value.trim(),file:($('#pFile').files[0]||{}).name||'',list};
   const box=$('#offers');
-  if(!list.length){box.innerHTML='<div class="card pad" style="margin-top:12px"><b>'+(CONFIG.masters.length?'Нет мастеров с материалом '+esc(mat):'Подберём мастера для тебя')+'</b><p class="muted small" style="margin:6px 0 10px">Отправь заявку в сообщество площадки: мы найдём мастера с нужным принтером и материалом, и он напишет тебе сам.</p><button class="btn pri wide" data-act="reqCommunity">Отправить заявку</button></div>';box.scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(!list.length){box.innerHTML='<div class="card pad" style="margin-top:12px"><b>'+(CONFIG.masters.length?'Нет мастеров с материалом '+esc(mat):'Пока нет мастеров с подходящим тарифом')+'</b><p class="muted small" style="margin:6px 0 10px">Опубликуй заявку в обсуждении «Ищу мастера или модель»: мастера увидят её и напишут тебе сами.</p><button class="btn pri wide" data-act="reqCommunity">Опубликовать заявку</button></div>';box.scrollIntoView({behavior:'smooth',block:'start'});return}
   box.innerHTML='<h2 class="sec">Предложения</h2><p class="small muted" style="margin-top:-4px">Оценка по тарифам мастеров. Точную цену мастер подтвердит после проверки модели.</p>'
    +list.map((o,i)=>{const s=o.m.stats||{};return '<div class="card pad offer"><div class="row"><div class="ava">'+esc(o.m.name.charAt(0))+'</div><div style="flex:1;min-width:0"><b>'+esc(o.m.name)+'</b> '+badgeIcons(o.m)+'<div class="small muted">'+esc(o.m.city)+' · '+(s.ratingCount?'★ '+dec(s.ratingAvg):'нет отзывов')+' · отвечает до '+(s.responseHours!=null?s.responseHours:'—')+' ч</div></div><div style="text-align:right"><div class="price">'+rub(o.total)+'</div><div class="small muted">'+o.days+' '+plural(o.days,'день','дня','дней')+'</div></div></div>'
      +'<div class="two" style="margin-top:10px"><button class="btn sm" data-act="master" data-id="'+esc(o.m.id)+'">О мастере</button><button class="btn pri sm" data-act="takeOffer" data-i="'+i+'">Выбрать</button></div></div>'}).join('');
@@ -735,8 +735,8 @@ function takeOffer(i){
   openSheet(head('Заказ у '+esc(o.m.name))
    +'<div class="card pad" style="margin-bottom:12px"><div class="kv"><span>Изделие</span><b>'+esc(r.title)+'</b></div><div class="kv"><span>Материал</span><b>'+esc(r.mat)+(r.color?', '+esc(r.color):'')+'</b></div><div class="kv"><span>Количество</span><b>'+r.qty+'</b></div><div class="kv"><span>Оценка цены</span><b>'+rub(o.total)+'</b></div></div>'
    +(S.user?'':'<label class="field"><span>Как к тебе обращаться</span><input class="input" id="oName" maxlength="40" value="'+esc(S.name)+'" placeholder="Имя"></label>')
-   +'<label class="field"><span>Получение</span><select id="oDel"><option value="pickup">Самовывоз у мастера</option><option value="post">Доставка (СДЭК, Почта и т. п.)</option><option value="courier">Курьер по городу</option></select></label>'
-   +'<label class="field" id="oAddrF" hidden><span>Город и адрес или пункт выдачи</span><input class="input" id="oAddr" maxlength="160"></label>'
+   +'<label class="field"><span>Получение</span><select id="oDel"><option value="post">Доставка (СДЭК, Почта и т. п.)</option><option value="pickup">Самовывоз у мастера</option><option value="courier">Курьер по городу</option></select></label>'
+   +'<label class="field" id="oAddrF"><span>Город и адрес или пункт выдачи</span><input class="input" id="oAddr" maxlength="160"></label>'
    +'<label class="field"><span>Оплата мастеру</span><select id="oPay"><option value="sbp">Перевод по СБП</option><option value="card">Перевод на карту</option><option value="cod">При получении</option></select></label>'
    +'<label class="check"><input type="checkbox" id="oOk"><span>Согласен передать данные заказа мастеру (<a href="'+legal('privacy')+'" target="_blank" rel="noopener">политика</a>)</span></label>'
    +'<button class="btn pri wide" data-act="placePrint" data-i="'+i+'">Отправить заявку</button>');
@@ -833,8 +833,8 @@ function openSellerReq(what,price,needCard){
    +'<p class="small muted">Оплата после подтверждения, по реквизитам в сообщениях, с чеком.</p>');
 }
 function openJoin(){
-  openSheet(head('Стать мастером')
-   +'<p style="margin-top:0" class="small muted">Заполни анкету: мы проверим данные и добавим тебя в каталог.</p>'+(CONFIG.launchPromo?'<p class="bdg b-top" style="display:inline-flex;white-space:normal;text-align:center;margin:0 0 12px">'+esc(CONFIG.launchPromo)+'</p>':'')
+  openSheet(head('Разместить свои услуги')
+   +'<p style="margin-top:0" class="small muted">Заполни анкету: после проверки статуса самозанятого или ИП твои карточки появятся в каталоге.</p>'+(CONFIG.launchPromo?'<p class="bdg b-top" style="display:inline-flex;white-space:normal;text-align:center;margin:0 0 12px">'+esc(CONFIG.launchPromo)+'</p>':'')
    +'<label class="field"><span>Имя или название мастерской</span><input class="input" id="jName" maxlength="40" value="'+esc(S.user?S.user.name:S.name)+'"></label>'
    +'<div class="two"><label class="field"><span>Город</span><input class="input" id="jCity" maxlength="40" value="'+esc(S.user&&S.user.city||'')+'"></label><label class="field"><span>Статус</span><select id="jSt"><option>Самозанятый</option><option>ИП</option></select></label></div>'
    +'<label class="field"><span>Принтеры</span><input class="input" id="jPr" maxlength="80" placeholder="Например, Bambu Lab A1, Ender-3"></label>'
@@ -847,7 +847,7 @@ function sendJoin(){
   const v=id=>($(id).value||'').trim();
   if(!v('#jName')||!v('#jCity')||!v('#jPr')){toast('Заполни имя, город и принтеры');return}
   if(!$('#jOk').checked){toast('Подтверди условия');return}
-  sendFlow('Анкета готова',['Анкета мастера «'+CONFIG.brand+'»','Имя: '+v('#jName'),'Город: '+v('#jCity'),'Статус: '+$('#jSt').value,'Принтеры: '+v('#jPr'),'Материалы: '+(v('#jMat')||'—'),'Работы: '+(v('#jUrl')||'—')].join('\n'),'Текст анкеты скопирован. Открой чат с сообществом и отправь его: мы ответим и добавим тебя в каталог.');
+  sendFlow('Анкета готова',['Анкета мастера «'+CONFIG.brand+'»','Имя: '+v('#jName'),'Город: '+v('#jCity'),'Статус: '+$('#jSt').value,'Принтеры: '+v('#jPr'),'Материалы: '+(v('#jMat')||'—'),'Работы: '+(v('#jUrl')||'—')].join('\n'),'Текст анкеты скопирован. Открой чат с сообществом и отправь его: мы ответим и разместим твои карточки.');
 }
 
 /* ---------- профиль и заказы ---------- */
@@ -906,7 +906,7 @@ function bindLegal(){document.querySelectorAll('[data-legal]').forEach(a=>a.href
 
 /* ---------- онбординг и согласие ---------- */
 const SLIDES=[
-  ['🖨️','Изделия и печать на заказ','Готовые вещи от мастеров и печать по твоему файлу. Цену считаем по тарифам мастеров.'],
+  ['🖨️','Изделия и печать на заказ','Готовые вещи от мастеров со всей России и печать по твоему файлу. Мастер сам отправит заказ. Цену считаем по тарифам мастеров.'],
   ['🛡️','Проверенные мастера','Бейджи показывают, кто прошёл проверку документов и стабильно выполняет заказы.'],
   ['🤝','Сделка напрямую с продавцом','Площадка только размещает предложения. Заказ уходит продавцу в личные сообщения, ты платишь ему и получаешь чек.']
 ];
@@ -955,7 +955,7 @@ document.addEventListener('click',async e=>{
     case 'placePrint':placePrint(+el.dataset.i);break;
     case 'cmode':S.cmode=el.dataset.m;recalc();break;
     case 'join':openJoin();break;
-    case 'reqCommunity':{const r=OFFERS;if(!r)break;sendFlow('Заявка на печать',['Заявка на печать через «'+CONFIG.brand+'»','Что печатаем: '+r.title,'Материал: '+r.mat+(r.color?', цвет: '+r.color:''),'Вес детали: ~'+r.grams+' г, количество: '+r.qty+(r.rush?', срочно':''),r.file?'Файл: '+r.file+' (пришлю в этот чат)':'Файла пока нет',r.note?'Комментарий: '+r.note:'','Покупатель: '+buyerName()].filter(Boolean).join('\n'),'Текст заявки скопирован. Отправь его в сообщество площадки и приложи STL, если есть: мы подберём мастера.');break}
+    case 'reqCommunity':{const r=OFFERS;if(!r)break;sendFlow('Заявка на печать',['Заявка на печать через «'+CONFIG.brand+'»','Что печатаем: '+r.title,'Материал: '+r.mat+(r.color?', цвет: '+r.color:''),'Вес детали: ~'+r.grams+' г, количество: '+r.qty+(r.rush?', срочно':''),r.file?'Файл: '+r.file+' (пришлю в этот чат)':'Файла пока нет',r.note?'Комментарий: '+r.note:'','Покупатель: '+buyerName()].filter(Boolean).join('\n'),'Текст заявки скопирован. Вставь его в обсуждение «Ищу мастера или модель» и приложи фото или STL, если есть: мастера откликнутся сами.',(CONFIG.boards.find(b=>/Ищу мастера/.test(b.title))||{}).url,'Открыть обсуждение');break}
     case 'buyPlan':{const p=PLAN[id];if(!p)break;openSellerReq('Тариф «'+p.name+'»',rub(p.price)+' в месяц',true);break}
     case 'buyExtra':{const x=(CONFIG.extras||[]).find(e=>e.id===id);if(!x)break;openSellerReq(x.name,rub(x.price)+' '+x.unit,x.id==='promo');break}
     case 'sendSellerReq':{const v=k=>($(k).value||'').trim();if(!v('#srName')){toast('Укажи имя продавца');break}
