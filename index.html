@@ -299,6 +299,7 @@ footer.legal{font-size:12px;color:var(--muted);padding:18px 0 8px}
 <!-- ПРОФИЛЬ -->
 <section id="v-profile" data-view hidden>
   <div class="card pad row" style="margin-top:12px" id="me"></div>
+  <div id="roleBox"></div>
   <h2 class="sec">Мои заказы</h2>
   <div id="orders"></div>
   <h2 class="sec">Избранное</h2>
@@ -313,6 +314,19 @@ footer.legal{font-size:12px;color:var(--muted);padding:18px 0 8px}
     <button class="item" data-act="wipe" style="color:var(--accent)">Удалить мои данные<span class="chev">›</span></button>
   </div>
   <footer class="legal" id="opInfo"></footer>
+</section>
+
+<!-- КАБИНЕТ МАСТЕРА -->
+<section id="v-cab" data-view hidden>
+  <div class="row between" style="margin:12px 0"><button class="btn sm" data-act="tab" data-v="profile">‹ Профиль</button><b style="font-size:18px">Кабинет мастера</b><button class="btn sm" data-act="openCab">Обновить</button></div>
+  <div id="cabBody"></div>
+</section>
+
+<!-- АДМИНКА -->
+<section id="v-admin" data-view hidden>
+  <div class="row between" style="margin:12px 0"><button class="btn sm" data-act="tab" data-v="profile">‹ Профиль</button><b style="font-size:18px">Админка</b><button class="btn sm" data-act="admReload">Обновить</button></div>
+  <div class="chips" id="admTabs" style="padding-top:0"></div>
+  <div id="admBody" style="margin-top:8px"></div>
 </section>
 
 </main>
@@ -343,6 +357,8 @@ const CONFIG={
   operator:{name:'Бухмин Андрей Геннадьевич', inn:'', email:'sloi_market@mail.ru'},
   // Адрес страницы с документами (лежит рядом с приложением)
   legalUrl:'legal.html',
+  // Адрес сервера площадки (Yandex Cloud Function). Пусто: каталог берётся из этого файла, без кабинетов и админки.
+  api:'https://functions.yandexcloud.net/d4e9pqeer8gr34jqf8a2',
   // true: показывать демо-товары и баннер. Перед запуском поставь false и заполни masters и products своими данными.
   demo:false,
   // Акция для первых продавцов (пустая строка — не показывать)
@@ -399,6 +415,7 @@ const CONFIG={
   ],
   // Обсуждения в сообществе. url: ссылка на тему вида https://vk.com/topic-123_456
   boards:[
+    {title:'Правила площадки',url:'https://vk.ru/topic-242361583_67963142'},
     {title:'Принтеры и настройка',url:'https://vk.ru/topic-242361583_67959590'},
     {title:'Материалы: PLA, PETG, ABS, смола',url:'https://vk.ru/topic-242361583_67959591'},
     {title:'Покажи свою печать',url:'https://vk.ru/topic-242361583_67959593'},
@@ -434,14 +451,15 @@ const ICON={
 
 /* ---------- данные ---------- */
 if(!CONFIG.demo){CONFIG.masters=CONFIG.masters.filter(m=>m.real);CONFIG.products=CONFIG.products.filter(p=>p.real);CONFIG.reviews=CONFIG.reviews.filter(r=>r.real)}
-const MAST={};CONFIG.masters.forEach(m=>MAST[m.id]=m);
+let MAST={},PRODUCTS=[],PROD={};
 const DEMO=!!CONFIG.demo;
 const PLAN={};(CONFIG.plans||[]).forEach(p=>PLAN[p.id]=p);
 const planOf=m=>PLAN[m&&m.plan]||(CONFIG.plans||[])[0]||{id:'free',name:'Старт',limit:0};
 const TODAY=new Date().toISOString().slice(0,10);
 const isPromo=p=>!!(p.promoUntil&&p.promoUntil>=TODAY);
-const PRODUCTS=(()=>{const cnt={};return CONFIG.products.filter(p=>{if(!MAST[p.master]||(p.type!=='print'&&p.type!=='service'))return false;const lim=planOf(MAST[p.master]).limit||0;cnt[p.master]=(cnt[p.master]||0)+1;return !lim||cnt[p.master]<=lim})})();
-const PROD={};PRODUCTS.forEach(p=>PROD[p.id]=p);
+function rebuild(){MAST={};CONFIG.masters.forEach(m=>MAST[m.id]=m);PRODUCTS=(()=>{const cnt={};return CONFIG.products.filter(p=>{if(!MAST[p.master]||(p.type!=='print'&&p.type!=='service'))return false;const lim=planOf(MAST[p.master]).limit||0;cnt[p.master]=(cnt[p.master]||0)+1;return !lim||cnt[p.master]<=lim})})();
+PROD={};PRODUCTS.forEach(p=>PROD[p.id]=p)}
+rebuild();
 const LP={};try{new URLSearchParams(location.search).forEach((v,k)=>LP[k]=v)}catch(e){}
 const IN_VK=!!(LP.vk_app_id||LP.vk_user_id||LP.sign);
 const TYPE={print:'Готовое изделие',service:'Услуга печати'};
@@ -591,7 +609,7 @@ function openProduct(id){
   const p=PROD[id];if(!p){toast('Товар не найден');return}
   const m=MAST[p.master],rv=reviewsOf(p.id),r=prodRating(p),f=S.fav.indexOf(p.id)>=0;
   openSheet(head(esc(p.title))
-   +'<div style="border-radius:14px;overflow:hidden;margin-bottom:12px;font-size:84px">'+tile(p).replace('class="tile"','class="tile" style="font-size:84px;--h:'+(+p.hue||200)+'"')+'</div>'
+   +'<div style="border-radius:14px;overflow:hidden;margin-bottom:12px;font-size:84px">'+tile(p).replace('<img ','<img id="galMain" ').replace('class="tile"','class="tile" style="font-size:84px;--h:'+(+p.hue||200)+'"')+'</div>'+((p.imgs||[]).length>1?'<div class="row" style="gap:6px;overflow-x:auto;margin:-4px 0 12px">'+p.imgs.map((u,i)=>'<button data-act="gal" data-u="'+esc(u)+'" aria-label="Фото '+(i+1)+'" style="border:0;padding:0;background:none;flex:none"><img src="'+esc(u)+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;display:block"></button>').join('')+'</div>':'')
    +'<div class="row between"><div><div class="ptype">'+TYPE[p.type]+'</div><div class="big">'+fmtPrice(p)+'</div></div>'+(r?'<div class="muted small">★ '+dec(r.avg)+' · '+r.n+' '+plural(r.n,'отзыв','отзыва','отзывов')+'</div>':'')+'</div>'
    +'<p>'+esc(p.desc||'')+'</p>'
    +'<div class="card pad" style="margin-bottom:12px"><div class="kv"><span>Материал</span><b>'+esc(p.material||'—')+'</b></div><div class="kv"><span>Размер</span><b>'+esc(p.size||'—')+'</b></div><div class="kv"><span>Время печати</span><b>'+esc(p.time||'—')+'</b></div><div class="kv"><span>Оплата</span><b>напрямую мастеру, с чеком</b></div></div>'
@@ -658,9 +676,10 @@ async function placeOrder(){
   if(!$('#oOk').checked){toast('Нужно согласие на передачу данных мастеру');return}
   const pay=$('#oPay').value,note=($('#oNote').value||'').trim(),by={};
   L.forEach(x=>(by[x.p.master]=by[x.p.master]||[]).push(x));
-  const made=Object.keys(by).map(mid=>({no:newNo(),ts:Date.now(),kind:'cart',master:mid,items:by[mid].map(x=>({t:x.p.title,price:x.p.price,unit:x.p.unit||'',q:x.q})),total:by[mid].reduce((a,x)=>a+x.p.price*x.q,0),del,addr,pay,note,status:'sent'}));
+  const made=Object.keys(by).map(mid=>({no:newNo(),ts:Date.now(),kind:'cart',master:mid,items:by[mid].map(x=>({id:x.p.id,t:x.p.title,price:x.p.price,unit:x.p.unit||'',q:x.q})),total:by[mid].reduce((a,x)=>a+x.p.price*x.q,0),del,addr,pay,note,status:'sent'}));
   S.orders=made.concat(S.orders);S.cart={};save();drawCartCnt();
   sendOrders(made);
+  made.forEach(o=>API.fire('orderSent',{no:o.no,master:o.master,total:o.total}));
 }
 function orderText(o){
   const m=MAST[o.master]||{name:o.master};
@@ -749,6 +768,7 @@ function placePrint(i){
   if(!$('#oOk').checked){toast('Нужно согласие на передачу данных мастеру');return}
   const ord={no:newNo(),ts:Date.now(),kind:'print',master:o.m.id,req:{title:r.title,mat:r.mat,color:r.color,grams:r.grams,qty:r.qty,rush:r.rush,file:r.file},items:[{t:'Печать: '+r.title+' ('+r.mat+')',price:o.total,unit:'',q:1}],total:o.total,del,addr,pay:$('#oPay').value,note:r.note,status:'sent'};
   S.orders.unshift(ord);save();
+  API.fire('orderSent',{no:ord.no,master:ord.master,total:ord.total});
   sendOrders([ord],'Приложи к сообщению STL-файл: продавец проверит модель, подтвердит цену и пришлёт реквизиты.');
 }
 async function previewSTL(f){
@@ -859,6 +879,7 @@ function drawProfile(){
   $('#favs').innerHTML=fv.length?'<div class="card pad">'+fv.map(p=>'<div class="mrow" data-act="prod" data-id="'+esc(p.id)+'" style="cursor:pointer">'+tile(p,'mini')+'<div style="flex:1;min-width:0"><b class="small">'+esc(p.title)+'</b><div class="small muted">'+fmtPrice(p)+'</div></div><span class="muted">›</span></div>').join('')+'</div>':'<div class="card pad muted">Нажми 🤍 на карточке, чтобы сохранить товар.</div>';
   const op=CONFIG.operator;
   $('#opInfo').innerHTML='Площадка размещения предложений. Оператор: '+esc(op.name)+(op.inn?', ИНН '+esc(op.inn):'')+', <a href="mailto:'+esc(op.email)+'">'+esc(op.email)+'</a>, сообщество <a href="https://vk.ru/'+esc(CONFIG.community.screen)+'" target="_blank" rel="noopener">vk.ru/'+esc(CONFIG.community.screen)+'</a>. Продавцы самостоятельно отвечают за товары и услуги; площадка не принимает платежи и не является стороной договора.';
+  drawRole();
 }
 function orderCard(o){
   const m=MAST[o.master]||{name:o.master},step={sent:1,paid:2,received:3}[o.status]||0;
@@ -875,7 +896,7 @@ function orderCard(o){
    +(act?'<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">'+act+'</div>':'')+'</div>';
 }
 const findOrder=no=>S.orders.find(o=>o.no===no);
-function setStatus(no,st){const o=findOrder(no);if(!o)return;if(st==='problem')o.prev=o.status;o.status=st;save();drawProfile()}
+function setStatus(no,st){const o=findOrder(no);if(!o)return;if(st==='received'&&o.status!=='received')API.fire('orderReceived',{no});if(st==='problem')o.prev=o.status;o.status=st;save();drawProfile()}
 function openReview(no){
   const o=findOrder(no);if(!o)return;
   openSheet(head('Отзыв о заказе')
@@ -888,6 +909,7 @@ function sendReview(no){
   const o=findOrder(no);if(!o)return;
   const st=+((document.querySelector('#stars [aria-pressed="true"]')||{}).dataset||{}).v||5,t=($('#rvT').value||'').trim();
   if(!t){toast('Напиши пару слов');return}
+  if(API.on()&&API.auth()){const b=document.querySelector('#shin [data-act=sendReview]');busy(b,true);API.call('review',{no:o.no,master:o.master,product:(o.items&&o.items[0]&&o.items[0].id)||'',stars:st,text:t,author:buyerName()}).then(()=>{o.reviewed=true;save();closeSheet();drawProfile();toast('Спасибо! Отзыв появится после проверки')}).catch(e=>{busy(b,false);toast(e.message)});return}
   o.reviewed=true;save();drawProfile();
   sendFlow('Отзыв готов',['Отзыв к заказу '+o.no+' («'+CONFIG.brand+'»)','Мастер: '+((MAST[o.master]||{}).name||o.master),'Оценка: '+'★'.repeat(st)+' ('+st+' из 5)',t,'Автор: '+buyerName()].join('\n'),'Текст отзыва скопирован. Отправь его в чат сообщества, можно с фото изделия.');
 }
@@ -948,7 +970,7 @@ document.addEventListener('click',async e=>{
     case 'copyOne':{const t=MSGS[+el.dataset.i];toast((await copyText(t||''))?'Текст скопирован':'Не удалось скопировать');break}
     case 'copyMsg':toast((await copyText(lastMsg))?'Текст скопирован':'Не удалось скопировать, выдели текст вручную');break;
     case 'share':shareProduct(id);break;
-    case 'report':{const p=PROD[id];sendFlow('Жалоба на карточку',['Жалоба на карточку «'+(p?p.title:id)+'» ('+id+')','Мастер: '+(p?MAST[p.master].name:'—'),'Причина: ','Отправитель: '+buyerName()].join('\n'),'Текст жалобы скопирован. Допиши причину и отправь в чат сообщества.');break}
+    case 'report':{if(API.on()&&API.auth()){openReportSheet(id);break}const p=PROD[id];sendFlow('Жалоба на карточку',['Жалоба на карточку «'+(p?p.title:id)+'» ('+id+')','Мастер: '+(p?MAST[p.master].name:'—'),'Причина: ','Отправитель: '+buyerName()].join('\n'),'Текст жалобы скопирован. Допиши причину и отправь в чат сообщества.');break}
     case 'printWith':{closeSheet();setTab('print');$('#pMaster').value=id;const mm=MAST[id];if(mm&&mm.materials&&mm.materials[0])$('#pMat').value=mm.materials[0];break}
     case 'offers':calcOffers();break;
     case 'takeOffer':takeOffer(+el.dataset.i);break;
@@ -960,7 +982,7 @@ document.addEventListener('click',async e=>{
     case 'buyExtra':{const x=(CONFIG.extras||[]).find(e=>e.id===id);if(!x)break;openSellerReq(x.name,rub(x.price)+' '+x.unit,x.id==='promo');break}
     case 'sendSellerReq':{const v=k=>($(k).value||'').trim();if(!v('#srName')){toast('Укажи имя продавца');break}
       sendFlow('Заявка готова',['Заявка продавца «'+CONFIG.brand+'»','Услуга: '+el.dataset.what+' ('+el.dataset.price+')','Продавец: '+v('#srName'),$('#srCard')&&v('#srCard')?'Карточка: '+v('#srCard'):'',v('#srNote')?'Комментарий: '+v('#srNote'):''].filter(Boolean).join('\n'),'Текст заявки скопирован. Отправь его в сообщество площадки: пришлём реквизиты и чек, после оплаты подключим услугу.');break}
-    case 'sendJoin':sendJoin();break;
+    case 'sendJoin':if(API.on()&&API.auth())await applyServer(el);else sendJoin();break;
     case 'ost':setStatus(no,el.dataset.v);toast('Статус обновлён');break;
     case 'resend':{const o=findOrder(no);if(o)sendOrders([o]);break}
     case 'cancel':{const o=findOrder(no);if(!o)break;o.status='cancelled';save();drawProfile();sendOrders([o],'',['Отменяю заказ '+o.no+'.\nПокупатель: '+buyerName()],'Отмена заказа');break}
@@ -978,6 +1000,7 @@ document.addEventListener('click',async e=>{
     case 'onbNext':slide=Math.min(SLIDES.length-1,slide+1);drawOnb();break;
     case 'onbSkip':slide=SLIDES.length-1;drawOnb();break;
     case 'onbDone':if(!$('#cOk').checked)break;S.consent=true;S.onb=true;save();$('#onb').close();handleHash();break;
+    default:if(EXT[a])await EXT[a](el);
   }
 });
 document.addEventListener('change',e=>{
@@ -1008,17 +1031,395 @@ async function shareApp(){
 }
 function handleHash(){const h=location.hash.replace(/^#/,''),m=/^(p|m)=(.+)$/.exec(h);if(!m)return;const v=decodeURIComponent(m[2]);if(m[1]==='p'&&PROD[v])openProduct(v);if(m[1]==='m'&&MAST[v])openMaster(v)}
 
+/* ---------- сервер площадки: каталог, кабинет мастера, админка ---------- */
+const API={
+  on(){return !!CONFIG.api},
+  auth(){return IN_VK&&!!LP.sign},
+  async call(a,body){
+    let r;
+    try{r=await timeout(fetch(CONFIG.api,{method:'POST',headers:{'Content-Type':'application/json','X-VK-Params':location.search.slice(1)},body:JSON.stringify(Object.assign({a},body||{}))}),25000)}
+    catch(e){throw new Error('Нет связи с сервером, попробуй ещё раз')}
+    let j={};try{j=await r.json()}catch(e){}
+    if(!r.ok)throw new Error(j.error||'Сервер недоступен, попробуй позже');
+    return j;
+  },
+  fire(a,body){if(this.on()&&this.auth())this.call(a,body).catch(()=>{})},
+  async catalog(){
+    try{const c=localStorage.getItem('sl_cat');if(c)applyCatalog(JSON.parse(c))}catch(e){}
+    try{
+      const r=await timeout(fetch(CONFIG.api+(CONFIG.api.indexOf('?')<0?'?':'&')+'a=catalog'),15000);
+      if(!r.ok)return;const d=await r.json();applyCatalog(d);
+      try{localStorage.setItem('sl_cat',JSON.stringify(d))}catch(e){}
+    }catch(e){}
+  }
+};
+let ME=null;
+function applyCatalog(d){
+  if(!d||!Array.isArray(d.masters))return;
+  CONFIG.masters=d.masters;CONFIG.products=Array.isArray(d.products)?d.products:[];CONFIG.reviews=Array.isArray(d.reviews)?d.reviews:[];
+  rebuild();const pre=$('#pMaster').value;fillPrintSelects(pre);drawHero();drawCatalog();drawCartCnt();
+  if(S.tab==='profile')drawProfile();
+}
+async function loadMe(){
+  if(!API.on()||!API.auth())return;
+  try{ME=await API.call('me')}catch(e){}
+  if(S.tab==='profile')drawRole();
+  if(ME&&ME.admin&&location.hash==='#adm'&&!loadMe.done){loadMe.done=1;await openAdmin();if(ADM){const t=ADM.products.some(p=>p.status==='pending')?'cards':ADM.reports.some(r=>r.state==='new')?'reports':ADM.apps.some(a=>a.state==='new')?'apps':ADMT;ADMT=t;drawAdmin()}}
+}
+const fday=d=>d?new Date(d+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}):'';
+const addDays=(n,from)=>{const x=from?new Date(from+'T12:00:00'):new Date();x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
+const vkLink=uid=>'https://vk.me/id'+encodeURIComponent(uid);
+const busy=(el,on)=>{if(!el)return;el.disabled=on;if(on){el.dataset.t=el.textContent;el.textContent='Подожди…'}else if(el.dataset.t)el.textContent=el.dataset.t};
+
+function drawRole(){
+  const b=$('#roleBox');if(!b)return;
+  if(!API.on()||!ME){b.innerHTML='';return}
+  let h='';
+  const big=(act,ico,t,s)=>'<button class="card pad row" data-act="'+act+'" style="width:100%;text-align:left;margin-top:10px;cursor:pointer"><div class="ava" aria-hidden="true">'+ico+'</div><div style="flex:1;min-width:0"><b>'+t+'</b><div class="small muted">'+s+'</div></div><span class="muted" aria-hidden="true">›</span></button>';
+  if(ME.admin)h+=big('openAdmin','⚙️','Админка площадки','Анкеты, карточки, мастера, отзывы, жалобы и доход');
+  if(ME.master){const m=ME.master,pl=PLAN[m.effPlan]||{name:m.effPlan};h+=big('openCab','🖨️','Кабинет мастера','Тариф «'+esc(pl.name)+'»'+(m.effPlan!=='free'&&m.planUntil?' до '+esc(fday(m.planUntil)):'')+' · карточки, профиль и цены')}
+  else if(ME.app&&ME.app.state==='new')h+='<div class="card pad" style="margin-top:10px"><b>Анкета мастера на проверке</b><p class="small muted" style="margin:4px 0 0">Обычно отвечаем за 1–2 дня. Чтобы ускорить, пришли в сообщения сообщества подтверждение статуса самозанятого или ИП.</p><a class="btn sm" style="margin-top:8px" href="'+esc(chatUrl())+'" target="_blank" rel="noopener">Написать в сообщество</a></div>';
+  else if(ME.app&&ME.app.state==='no')h+='<div class="card pad" style="margin-top:10px"><b>Анкета отклонена</b>'+(ME.app.note?'<p class="small" style="margin:4px 0 0">'+esc(ME.app.note)+'</p>':'')+'<button class="btn sm" data-act="join" style="margin-top:8px">Подать анкету снова</button></div>';
+  b.innerHTML=h;
+}
+
+/* ---------- анкета мастера через сервер ---------- */
+async function applyServer(btn){
+  const v=id=>($(id).value||'').trim();
+  if(!v('#jName')||!v('#jCity')||!v('#jPr')){toast('Заполни имя, город и принтеры');return}
+  if(!$('#jOk').checked){toast('Подтверди условия');return}
+  busy(btn,true);
+  try{
+    if(B.ok&&CONFIG.community.id){try{await B.send('VKWebAppAllowMessagesFromGroup',{group_id:+CONFIG.community.id})}catch(e){}}
+    await API.call('apply',{name:v('#jName'),city:v('#jCity'),status:$('#jSt').value,printers:v('#jPr'),materials:v('#jMat'),works:v('#jUrl'),agree:true});
+    await loadMe();
+    openSheet(head('Анкета отправлена')+'<p style="margin-top:0">Проверим статус самозанятого или ИП и откроем тебе кабинет мастера, обычно за 1–2 дня. Кабинет появится во вкладке «Профиль».</p>'
+      +'<p class="small muted">Чтобы ускорить проверку, пришли в сообщения сообщества скриншот из «Мой налог» или выписку ИП.</p>'
+      +'<a class="btn pri wide" href="'+esc(chatUrl())+'" target="_blank" rel="noopener">Написать в сообщество</a>');
+  }catch(e){toast(e.message)}finally{busy(btn,false)}
+}
+
+/* ---------- кабинет мастера ---------- */
+let MY=[],EDIT=null;
+const PST={pending:['На проверке','b-top'],ok:['Опубликована','b-rel'],rejected:['Отклонена','b-new']};
+async function openCab(){
+  closeSheet();setTab('cab');$('#cabBody').innerHTML='<p class="muted">Загружаю…</p>';
+  await loadMe();
+  if(ME&&ME.master&&ME.master.blocked){MY=[];drawCab();return}
+  try{MY=(await API.call('myProducts')).items||[]}catch(e){$('#cabBody').innerHTML='<div class="card pad">'+esc(e.message)+'</div>';return}
+  drawCab();
+}
+function drawCab(){
+  const m=ME&&ME.master;
+  if(!m){$('#cabBody').innerHTML='<div class="card pad">Кабинет откроется после одобрения анкеты.</div>';return}
+  if(m.blocked){$('#cabBody').innerHTML='<div class="card pad"><b style="color:var(--accent)">Аккаунт мастера заблокирован</b><p class="small" style="margin:6px 0 0">'+(m.blockReason?'Причина: '+esc(m.blockReason)+'. ':'')+'Карточки скрыты из каталога. Если считаешь это ошибкой, напиши в сообщество.</p><a class="btn sm" style="margin-top:10px" href="'+esc(chatUrl())+'" target="_blank" rel="noopener">Написать в сообщество</a></div>';return}
+  const pl=PLAN[m.effPlan]||{name:m.effPlan},lim=m.limit||0,okN=MY.filter(p=>p.status==='ok').length,s=m.stats||{};
+  $('#cabBody').innerHTML='<div class="card pad" style="margin-bottom:12px"><div class="row between" style="flex-wrap:wrap"><b style="font-size:17px">'+esc(m.name)+'</b>'+(m.verified?'<span class="bdg b-ver">'+ICON.ver+'Документы проверены</span>':'')+'</div>'
+   +'<div class="kv"><span>Тариф</span><b>«'+esc(pl.name)+'»'+(m.effPlan!=='free'&&m.planUntil?' до '+esc(fday(m.planUntil)):'')+'</b></div>'
+   +'<div class="kv"><span>Карточек в каталоге</span><b>'+(lim?Math.min(okN,lim)+' из '+lim:okN)+'</b></div>'
+   +'<div class="kv"><span>Завершённых заказов</span><b>'+(s.orders||0)+'</b></div>'
+   +'<div class="kv"><span>Оценка</span><b>'+(s.ratingCount?'★ '+dec(s.ratingAvg)+' · '+s.ratingCount+' '+plural(s.ratingCount,'отзыв','отзыва','отзывов'):'отзывов пока нет')+'</b></div>'
+   +(lim&&okN>lim?'<p class="small" style="color:var(--warn);margin:8px 0 0">В каталоге видны первые '+lim+' карточки. Чтобы показать все, перейди на тариф выше.</p>':'')
+   +'<div class="two" style="margin-top:10px"><button class="btn" data-act="cabProfile">Профиль и цены</button><button class="btn" data-act="tab" data-v="community">Тарифы</button></div></div>'
+   +'<button class="btn pri wide" data-act="cabEdit" style="margin-bottom:12px">+ Добавить карточку</button>'
+   +(MY.length?MY.map(p=>{const st=PST[p.status]||PST.pending;return '<div class="card pad row" style="margin-bottom:8px;align-items:flex-start">'+tile(p,'mini')
+     +'<div style="flex:1;min-width:0"><b class="small" style="display:block">'+esc(p.title)+'</b><div class="small muted">'+fmtPrice(p)+'</div>'
+     +'<div class="row" style="gap:4px;flex-wrap:wrap;margin-top:4px"><span class="bdg '+st[1]+'">'+st[0]+'</span>'+(isPromo(p)?'<span class="bdg b-ver">Продвигается до '+esc(fday(p.promoUntil))+'</span>':'')+'</div>'
+     +(p.status==='rejected'&&p.note?'<div class="small" style="color:var(--warn);margin-top:4px">'+esc(p.note)+'</div>':'')+'</div>'
+     +'<button class="btn sm" data-act="cabEdit" data-id="'+esc(p.id)+'">Изменить</button></div>'}).join('')
+     :'<div class="card pad muted">Карточек пока нет. Добавь первое изделие или услугу: после проверки карточка появится в каталоге.</div>');
+}
+function cabEdit(id){
+  const p=id?MY.find(x=>x.id===id):{type:'print',material:'PLA'};if(!p)return;
+  EDIT={id:p.id||'',type:p.type==='service'?'service':'print',imgs:(p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[])).slice(0,5)};
+  const mats=Object.keys(CONFIG.materials);
+  openSheet(head(id?'Изменить карточку':'Новая карточка')
+   +'<div class="seg" id="eType" role="group" aria-label="Тип" style="margin-bottom:12px"><button data-act="eType" data-v="print" aria-pressed="'+(EDIT.type==='print')+'">Готовое изделие</button><button data-act="eType" data-v="service" aria-pressed="'+(EDIT.type==='service')+'">Услуга печати</button></div>'
+   +'<label class="field"><span>Название</span><input class="input" id="eTitle" maxlength="80" value="'+esc(p.title||'')+'" placeholder="Например, ночник «Луна»"></label>'
+   +'<div class="two"><label class="field"><span>Цена, ₽</span><input class="input" id="ePrice" type="number" inputmode="numeric" min="1" step="1" value="'+(p.price||'')+'"></label>'
+   +'<label class="field"><span>За что цена</span><input class="input" id="eUnit" maxlength="30" value="'+esc(p.unit||'')+'" placeholder="за штуку"></label></div>'
+   +'<div class="two"><label class="field"><span>Материал</span><select id="eMat">'+mats.map(k=>'<option'+(k===p.material?' selected':'')+'>'+esc(k)+'</option>').join('')+'</select></label>'
+   +'<label class="field"><span>Размер</span><input class="input" id="eSize" maxlength="40" value="'+esc(p.size||'')+'" placeholder="12 см"></label></div>'
+   +'<label class="field"><span>Срок изготовления</span><input class="input" id="eTime" maxlength="40" value="'+esc(p.time||'')+'" placeholder="2–3 дня"></label>'
+   +'<label class="field"><span>Описание</span><textarea id="eDesc" maxlength="1500" placeholder="Что это, для чего, какие цвета, как отправляешь">'+esc(p.desc||'')+'</textarea></label>'
+   +'<div class="field"><span>Фото, до 5 штук</span><div id="ePh" class="row" style="flex-wrap:wrap;gap:8px"></div><input type="file" id="eFile" accept="image/*" multiple hidden></div>'
+   +'<p class="small muted">После сохранения карточка уйдёт на проверку. Обычно проверяем в течение дня. Если не пройдёт, в кабинете и в сообщениях ВК будет причина.</p>'
+   +'<button class="btn pri wide" data-act="cabSave">Сохранить</button>'
+   +(id?'<button class="btn wide" data-act="cabDel" data-id="'+esc(id)+'" style="margin-top:8px;color:var(--accent)">Удалить карточку</button>':''));
+  drawEPh();
+}
+function drawEPh(){
+  const b=$('#ePh');if(!b||!EDIT)return;
+  b.innerHTML=EDIT.imgs.map((u,i)=>'<div style="position:relative"><img src="'+esc(u)+'" alt="Фото '+(i+1)+'" style="width:72px;height:72px;object-fit:cover;border-radius:10px;display:block"><button class="x" data-act="ePhDel" data-i="'+i+'" aria-label="Убрать фото '+(i+1)+'" style="position:absolute;top:-6px;right:-6px;width:26px;height:26px;font-size:14px">×</button></div>').join('')
+   +(EDIT.imgs.length<5?'<button class="btn" data-act="ePhAdd" style="width:72px;height:72px;font-size:26px;padding:0" aria-label="Добавить фото">+</button>':'');
+}
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{
+      const k=Math.min(1,1200/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+      c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+      const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      let q=0.85,d=c.toDataURL('image/jpeg',q);while(d.length*0.75>650000&&q>0.4){q-=0.15;d=c.toDataURL('image/jpeg',q)}
+      res(d)};
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Не удалось открыть фото'))};
+    img.src=url;
+  });
+}
+async function uploadPhotos(files){
+  const L=[...files].slice(0,5-EDIT.imgs.length);if(!L.length)return;
+  toast('Загружаю фото…');
+  for(const f of L){try{const d=await shrink(f);const r=await API.call('uploadPhoto',{data:d});EDIT.imgs.push(r.url);drawEPh()}catch(e){toast(e.message)}}
+}
+async function cabSave(btn){
+  const v=id=>($(id).value||'').trim();
+  const body={id:EDIT.id,type:EDIT.type,title:v('#eTitle'),price:+v('#ePrice')||0,unit:v('#eUnit'),material:$('#eMat').value,size:v('#eSize'),time:v('#eTime'),desc:v('#eDesc'),imgs:EDIT.imgs};
+  if(body.title.length<3){toast('Напиши название');$('#eTitle').focus();return}
+  if(!body.price){toast('Укажи цену');$('#ePrice').focus();return}
+  busy(btn,true);
+  try{const r=await API.call('saveProduct',body);closeSheet();toast(r.published?'Карточка опубликована':'Сохранено, карточка на проверке');if(r.published)API.catalog();MY=(await API.call('myProducts')).items||[];drawCab()}
+  catch(e){toast(e.message)}finally{busy(btn,false)}
+}
+async function cabDel(id,btn){
+  if(btn.dataset.sure!=='1'){btn.dataset.sure='1';btn.textContent='Нажми ещё раз, чтобы удалить';return}
+  busy(btn,true);
+  try{await API.call('deleteProduct',{id});closeSheet();toast('Карточка удалена');MY=MY.filter(p=>p.id!==id);drawCab();API.catalog()}
+  catch(e){toast(e.message)}finally{busy(btn,false)}
+}
+function cabProfile(){
+  const m=ME&&ME.master;if(!m)return;const t=m.tariff||{};
+  openSheet(head('Профиль и цены')
+   +'<label class="field"><span>Имя или название мастерской</span><input class="input" id="mName" maxlength="40" value="'+esc(m.name)+'"></label>'
+   +'<div class="two"><label class="field"><span>Город</span><input class="input" id="mCity" maxlength="40" value="'+esc(m.city)+'"></label>'
+   +'<label class="field"><span>Статус</span><select id="mSt"><option'+(m.status!=='ИП'?' selected':'')+'>Самозанятый</option><option'+(m.status==='ИП'?' selected':'')+'>ИП</option></select></label></div>'
+   +'<label class="field"><span>О себе</span><textarea id="mAbout" maxlength="300" placeholder="Что печатаешь лучше всего">'+esc(m.about||'')+'</textarea></label>'
+   +'<label class="field"><span>Принтеры, через запятую</span><input class="input" id="mPr" maxlength="300" value="'+esc((m.printers||[]).join(', '))+'"></label>'
+   +'<label class="field"><span>Материалы, через запятую</span><input class="input" id="mMat" maxlength="200" value="'+esc((m.materials||[]).join(', '))+'" placeholder="'+esc(Object.keys(CONFIG.materials).join(', '))+'"></label>'
+   +'<label class="field"><span>Доставка</span><input class="input" id="mDel" maxlength="120" value="'+esc(m.delivery||'')+'" placeholder="СДЭК, Почта России по всей стране"></label>'
+   +'<h2 class="sec" style="margin-top:6px">Цены для расчёта печати</h2><p class="small muted" style="margin-top:-6px">По ним покупатель видит примерную цену своей детали во вкладке «Печать».</p>'
+   +'<div class="two"><label class="field"><span>Пластик, ₽ за грамм</span><input class="input" id="mG" type="number" inputmode="decimal" min="0" step="any" value="'+(t.gram||'')+'"></label>'
+   +'<label class="field"><span>Работа принтера, ₽ в час</span><input class="input" id="mH" type="number" inputmode="decimal" min="0" step="any" value="'+(t.hour||'')+'"></label></div>'
+   +'<div class="two"><label class="field"><span>Подготовка, ₽ за заказ</span><input class="input" id="mS" type="number" inputmode="decimal" min="0" step="any" value="'+(t.setup||'')+'"></label>'
+   +'<label class="field"><span>Наценка за срочность, %</span><input class="input" id="mR" type="number" inputmode="decimal" min="0" step="any" value="'+(t.rush||'')+'"></label></div>'
+   +'<button class="btn pri wide" data-act="cabProfileSave">Сохранить</button>');
+}
+async function cabProfileSave(btn){
+  const v=id=>($(id).value||'').trim();
+  const body={name:v('#mName'),city:v('#mCity'),status:$('#mSt').value,about:v('#mAbout'),printers:v('#mPr'),materials:v('#mMat'),delivery:v('#mDel'),tariff:{gram:+v('#mG')||0,hour:+v('#mH')||0,setup:+v('#mS')||0,rush:+v('#mR')||0}};
+  if(!body.name||!body.city){toast('Заполни имя и город');return}
+  busy(btn,true);
+  try{await API.call('saveProfile',body);closeSheet();toast('Профиль сохранён');await loadMe();drawCab();API.catalog()}
+  catch(e){toast(e.message)}finally{busy(btn,false)}
+}
+
+/* ---------- админка ---------- */
+let ADM=null,ADMT='apps';
+async function openAdmin(){closeSheet();setTab('admin');await admLoad()}
+async function admLoad(){
+  $('#admBody').innerHTML='<p class="muted">Загружаю…</p>';
+  try{ADM=await API.call('adminData')}catch(e){$('#admBody').innerHTML='<div class="card pad">'+esc(e.message)+'</div>';return}
+  drawAdmin();
+}
+const admM=id=>(ADM.masters.find(m=>m.id===id)||{name:id,uid:''});
+const stBadge=(t,c)=>'<span class="bdg '+c+'">'+esc(t)+'</span>';
+const when=ts=>ts?fdate(ts):'';
+const newFirst=(a,k,v)=>a.slice().sort((x,y)=>(y[k]===v)-(x[k]===v));
+function drawAdmin(){
+  if(!ADM)return;
+  const n={apps:ADM.apps.filter(a=>a.state==='new').length,cards:ADM.products.filter(p=>p.status==='pending').length,reviews:ADM.reviews.filter(r=>r.state==='new').length,reports:ADM.reports.filter(r=>r.state==='new').length};
+  const T=[['apps','Анкеты'],['cards','Карточки'],['masters','Мастера'],['reviews','Отзывы'],['reports','Жалобы'],['money','Доход']];
+  $('#admTabs').innerHTML=T.map(t=>'<button class="chip" data-act="admTab" data-v="'+t[0]+'" aria-pressed="'+(ADMT===t[0])+'">'+t[1]+(n[t[0]]?' · '+n[t[0]]:'')+'</button>').join('');
+  $('#admBody').innerHTML=ADMV[ADMT]();
+}
+const ADMV={
+  apps(){
+    if(!ADM.apps.length)return '<div class="card pad muted">Анкет пока нет. Они появятся, когда мастера нажмут «Разместить свои услуги».</div>';
+    return newFirst(ADM.apps,'state','new').map(a=>'<div class="card pad" style="margin-bottom:10px"><div class="row between"><b>'+esc(a.name)+'</b>'
+      +(a.state==='new'?stBadge('Новая','b-top'):a.state==='ok'?stBadge('Одобрена','b-rel'):stBadge('Отклонена','b-new'))+'</div>'
+      +'<div class="small muted">'+esc(when(a.created))+' · VK id'+esc(a.uid)+'</div>'
+      +'<div class="kv"><span>Город</span><b>'+esc(a.city)+'</b></div><div class="kv"><span>Статус</span><b>'+esc(a.status)+'</b></div>'
+      +'<div class="kv"><span>Принтеры</span><b>'+esc((a.printers||[]).join(', '))+'</b></div><div class="kv"><span>Материалы</span><b>'+esc((a.materials||[]).join(', ')||'—')+'</b></div>'
+      +(a.works?'<div class="kv"><span>Работы</span><b>'+(/^https?:\/\//.test(a.works)?'<a href="'+esc(a.works)+'" target="_blank" rel="noopener">открыть</a>':esc(a.works))+'</b></div>':'')
+      +(a.note?'<p class="small muted">Комментарий: '+esc(a.note)+'</p>':'')
+      +'<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><a class="btn sm" href="'+esc(vkLink(a.uid))+'" target="_blank" rel="noopener">Написать</a>'
+      +(a.state==='new'?'<button class="btn sm pri" data-act="admApprove" data-id="'+esc(a.id)+'">Одобрить</button><button class="btn sm" data-act="admReject" data-id="'+esc(a.id)+'">Отклонить</button>':'')+'</div></div>').join('');
+  },
+  cards(){
+    if(!ADM.products.length)return '<div class="card pad muted">Карточек пока нет.</div>';
+    return newFirst(ADM.products,'status','pending').map(p=>{const m=admM(p.master),st=PST[p.status]||PST.pending;return '<div class="card pad" style="margin-bottom:10px"><div class="row" style="align-items:flex-start">'+tile(p,'mini')
+      +'<div style="flex:1;min-width:0"><b class="small" style="display:block">'+esc(p.title)+'</b><div class="small muted">'+fmtPrice(p)+' · '+esc(TYPE[p.type]||'')+' · '+esc(p.material||'')+'</div><div class="small muted">'+esc(m.name)+'</div>'
+      +'<div class="row" style="gap:4px;flex-wrap:wrap;margin-top:4px">'+stBadge(st[0],st[1])+(isPromo(p)?stBadge('Продвижение до '+fday(p.promoUntil),'b-ver'):'')+'</div></div></div>'+(p.status==='pending'?((p.flags||[]).length?'<div class="small" style="color:var(--warn);margin-top:8px">⚠ Автопроверка, претензии: '+esc(p.flags.join('; '))+'</div>':'<div class="small" style="color:var(--ok);margin-top:8px">✅ Автопроверка: замечаний нет</div>'):'')+(p.status==='rejected'&&p.note?'<div class="small muted" style="margin-top:8px">Причина отказа: '+esc(p.note)+'</div>':'')+(m.blocked?'<div class="small" style="color:var(--accent);margin-top:6px">Мастер заблокирован</div>':'')
+      +(p.desc?'<p class="small" style="margin:8px 0 0;white-space:pre-wrap">'+esc(p.desc.slice(0,400))+'</p>':'')
+      +((p.imgs||[]).length>1?'<div class="row" style="gap:6px;margin-top:8px;overflow-x:auto">'+p.imgs.map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px;display:block"></a>').join('')+'</div>':'')
+      +'<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:10px">'
+      +(p.status!=='ok'&&!m.blocked?'<button class="btn sm pri" data-act="admCard" data-id="'+esc(p.id)+'" data-v="ok">Опубликовать</button>':'')
+      +(m.id&&!m.blocked?'<button class="btn sm" data-act="admBlock" data-id="'+esc(m.id)+'" style="color:var(--accent)">Заблокировать мастера</button>':'')
+      +(p.status!=='rejected'?'<button class="btn sm" data-act="admCardNo" data-id="'+esc(p.id)+'">'+(p.status==='ok'?'Снять с публикации':'Отклонить')+'</button>':'')
+      +'<button class="btn sm" data-act="admPromo" data-id="'+esc(p.id)+'">Продвижение</button>'
+      +(m.uid?'<a class="btn sm" href="'+esc(vkLink(m.uid))+'" target="_blank" rel="noopener">Написать мастеру</a>':'')+'</div></div>'}).join('');
+  },
+  masters(){
+    if(!ADM.masters.length)return '<div class="card pad muted">Мастеров пока нет. Одобри первую анкету.</div>';
+    return ADM.masters.slice().sort((a,b)=>b.created-a.created).map(m=>{const pl=PLAN[m.effPlan]||{name:m.effPlan},s=m.stats||{};return '<div class="card pad" style="margin-bottom:10px"><div class="row between" style="flex-wrap:wrap;gap:6px"><b>'+esc(m.name)+'</b><span class="row" style="gap:4px;flex-wrap:wrap">'
+      +(m.blocked?stBadge('Заблокирован','b-new'):'')+(m.verified?stBadge('Документы проверены','b-ver'):'')+(m.gift&&m.effPlan!=='free'?stBadge('По акции','b-top'):'')+'</span></div>'
+      +'<div class="small muted">'+esc(m.city)+' · '+esc(m.status)+' · VK id'+esc(m.uid)+'</div>'
+      +'<div class="kv"><span>Тариф</span><b>«'+esc(pl.name)+'»'+(m.effPlan!=='free'&&m.planUntil?' до '+esc(fday(m.planUntil)):'')+(m.plan!=='free'&&m.effPlan==='free'?' (истёк '+esc(fday(m.planUntil))+')':'')+'</b></div>'
+      +'<div class="kv"><span>Карточек</span><b>'+(m.cards||0)+'</b></div><div class="kv"><span>Заказов / покупателей</span><b>'+(s.orders||0)+' / '+(s.buyers||0)+'</b></div>'
+      +'<div class="kv"><span>Оценка</span><b>'+(s.ratingCount?'★ '+dec(s.ratingAvg)+' · '+s.ratingCount:'—')+'</b></div>'
+      +(m.adminNote?'<p class="small muted">Заметка: '+esc(m.adminNote)+'</p>':'')
+      +'<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn sm pri" data-act="admMaster" data-id="'+esc(m.id)+'">Изменить</button><a class="btn sm" href="'+esc(vkLink(m.uid))+'" target="_blank" rel="noopener">Написать</a></div></div>'}).join('');
+  },
+  reviews(){
+    if(!ADM.reviews.length)return '<div class="card pad muted">Отзывов пока нет.</div>';
+    return newFirst(ADM.reviews,'state','new').map(r=>'<div class="card pad" style="margin-bottom:10px"><div class="row between"><b>'+esc(r.author)+' → '+esc(admM(r.master).name)+'</b>'
+      +(r.state==='new'?stBadge('Новый','b-top'):r.state==='ok'?stBadge('Опубликован','b-rel'):stBadge('Скрыт','b-new'))+'</div>'
+      +'<div class="small muted">'+esc(when(r.created))+(r.order?' · заказ '+esc(r.order):' · без подтверждённого заказа')+'</div>'
+      +'<div style="color:var(--accent);margin:6px 0">'+'★'.repeat(r.stars)+'<span class="muted">'+'★'.repeat(5-r.stars)+'</span></div><p class="small" style="margin:0;white-space:pre-wrap">'+esc(r.text)+'</p>'
+      +'<div class="row" style="gap:6px;margin-top:8px">'+(r.state!=='ok'?'<button class="btn sm pri" data-act="admReview" data-id="'+esc(r.id)+'" data-v="1">Опубликовать</button>':'')+(r.state!=='hidden'?'<button class="btn sm" data-act="admReview" data-id="'+esc(r.id)+'" data-v="0">Скрыть</button>':'')+'</div></div>').join('');
+  },
+  reports(){
+    if(!ADM.reports.length)return '<div class="card pad muted">Жалоб нет.</div>';
+    const RES={buyer:'В пользу покупателя',master:'В пользу мастера',none:'Без последствий'};
+    return newFirst(ADM.reports,'state','new').map(r=>'<div class="card pad" style="margin-bottom:10px"><div class="row between"><b>'+esc(r.reason||'Жалоба')+'</b>'+(r.state==='new'?stBadge('Новая','b-top'):stBadge(RES[r.resolution]||'Закрыта','b-new'))+'</div>'
+      +'<div class="small muted">'+esc(when(r.created))+' · '+(r.kind==='order'?'заказ ':'карточка ')+esc(r.ref)+' · мастер '+esc(admM(r.master).name)+' · от '+esc(r.author||('id'+r.uid))+'</div>'
+      +(r.text?'<p class="small" style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.text)+'</p>':'')
+      +'<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><a class="btn sm" href="'+esc(vkLink(r.uid))+'" target="_blank" rel="noopener">Написать автору</a>'
+      +(r.state==='new'?'<button class="btn sm" data-act="admReport" data-id="'+esc(r.id)+'" data-v="buyer">Прав покупатель</button><button class="btn sm" data-act="admReport" data-id="'+esc(r.id)+'" data-v="master">Прав мастер</button><button class="btn sm" data-act="admReport" data-id="'+esc(r.id)+'" data-v="none">Закрыть</button>':'')+'</div></div>').join('');
+  },
+  money(){
+    const paid=ADM.masters.filter(m=>m.effPlan!=='free'&&!m.gift&&!m.blocked),gift=ADM.masters.filter(m=>m.effPlan!=='free'&&m.gift&&!m.blocked);
+    const sum=paid.reduce((a,m)=>a+((PLAN[m.effPlan]||{}).price||0),0);
+    const soon=ADM.masters.filter(m=>m.effPlan!=='free'&&m.planUntil&&m.planUntil<=addDays(7)).sort((a,b)=>a.planUntil<b.planUntil?-1:1);
+    const days=ADM.days.slice().reverse(),tot=k=>ADM.days.reduce((a,d)=>a+(d[k]||0),0);
+    return '<div class="card pad" style="margin-bottom:10px"><div class="small muted">Тарифы в месяц, без бесплатных по акции</div><div class="big">'+rub(sum)+'</div>'
+      +(CONFIG.plans||[]).filter(p=>p.price).map(p=>'<div class="kv"><span>«'+esc(p.name)+'» по '+rub(p.price)+'</span><b>'+paid.filter(m=>m.effPlan===p.id).length+'</b></div>').join('')
+      +'<div class="kv"><span>По акции бесплатно</span><b>'+gift.length+'</b></div><div class="kv"><span>На бесплатном «Старте»</span><b>'+ADM.masters.filter(m=>m.effPlan==='free').length+'</b></div>'
+      +'<p class="small muted" style="margin:8px 0 0">Продвижение, проверка документов и посты оплачиваются разово и сюда не входят.</p></div>'
+      +'<h2 class="sec">Тариф заканчивается в ближайшие 7 дней</h2>'
+      +(soon.length?'<div class="card pad">'+soon.map(m=>'<div class="kv"><span>'+esc(m.name)+' · «'+esc((PLAN[m.effPlan]||{}).name||'')+'»</span><b>'+esc(fday(m.planUntil))+'</b></div>').join('')+'</div>':'<div class="card pad muted">Нет.</div>')
+      +'<h2 class="sec">Статистика за 30 дней</h2>'
+      +'<div class="card pad"><div class="kv"><span>Посетителей (сумма по дням)</span><b>'+tot('users')+'</b></div><div class="kv"><span>Открытий</span><b>'+tot('open')+'</b></div><div class="kv"><span>Отправлено заказов</span><b>'+tot('orders')+'</b></div><div class="kv"><span>Анкет мастеров</span><b>'+tot('apps')+'</b></div></div>'
+      +(days.length?'<div class="card pad" style="margin-top:10px;overflow-x:auto"><table class="small" style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left">День</th><th style="text-align:right">Люди</th><th style="text-align:right">Открытия</th><th style="text-align:right">Заказы</th><th style="text-align:right">Анкеты</th></tr></thead><tbody>'
+        +days.slice(0,14).map(d=>'<tr><td>'+esc(d.d.slice(5).split('-').reverse().join('.'))+'</td><td style="text-align:right">'+d.users+'</td><td style="text-align:right">'+d.open+'</td><td style="text-align:right">'+d.orders+'</td><td style="text-align:right">'+d.apps+'</td></tr>').join('')+'</tbody></table></div>':'')
+      +'<h2 class="sec">Настройки</h2><div class="card pad"><label class="check" style="margin:0"><input type="checkbox" id="admAuto"'+(ADM.settings.autoApprove?' checked':'')+'><span>Публиковать без моей проверки карточки, у которых автопроверка не нашла замечаний. Сейчас выключено: каждую карточку одобряешь ты, а в уведомлении приходит вердикт автопроверки</span></label></div>'
+      +'<p class="small muted">Всего заказов, отправленных через приложение: '+(ADM.orders||0)+'.</p>';
+  }
+};
+async function admDo(a,body,btn,msg){
+  busy(btn,true);
+  try{await API.call(a,body);if(sheet.open)closeSheet();toast(msg||'Готово');await admLoad();API.catalog()}
+  catch(e){toast(e.message)}finally{busy(btn,false)}
+}
+function planFields(plan,until,gift){
+  return '<div class="two"><label class="field"><span>Тариф</span><select id="aPlan">'+(CONFIG.plans||[]).map(p=>'<option value="'+esc(p.id)+'"'+(p.id===plan?' selected':'')+'>'+esc(p.name)+(p.price?' · '+rub(p.price):'')+'</option>').join('')+'</select></label>'
+   +'<label class="field"><span>Действует до</span><input class="input" id="aUntil" type="date" value="'+esc(until||'')+'"></label></div>'
+   +'<label class="check"><input type="checkbox" id="aGift"'+(gift?' checked':'')+'><span>Бесплатно по акции (не считать в доходе)</span></label>';
+}
+function admApprove(id){
+  const a=ADM.apps.find(x=>x.id===id);if(!a)return;
+  const promo=!!CONFIG.launchPromo&&ADM.masters.filter(m=>m.gift).length<20;
+  openSheet(head('Одобрить: '+esc(a.name))
+   +'<p class="small muted" style="margin-top:0">Перед одобрением проверь статус мастера: скриншот из «Мой налог» или выписку ИП он присылает в сообщения сообщества.</p>'
+   +planFields(promo?'pro':'free',promo?addDays(91):'',promo)
+   +(promo?'<p class="small muted" style="margin-top:-6px">Подставлена акция: «'+esc(CONFIG.launchPromo)+'».</p>':'')
+   +'<label class="check"><input type="checkbox" id="aVer"><span>Документы проверены (бейдж)</span></label>'
+   +'<button class="btn pri wide" data-act="admApproveYes" data-id="'+esc(id)+'">Одобрить и открыть кабинет</button>');
+}
+const REASONS={
+  card:['Нет фото готового изделия','Фото чужое или из интернета','Запрещённый товар','Чужая модель или бренд без лицензии','Неполное описание: размер, материал, срок','Цена указана неверно','Дубликат карточки'],
+  app:['Не подтверждён статус самозанятого или ИП','Нет примеров работ','Неполная анкета','Профиль ВКонтакте вызывает сомнения'],
+  block:['Запрещённые товары','Обман покупателей','Повторные нарушения правил','Грубость и оскорбления','Фейковые карточки или спам']
+};
+function admNote(title,act,id,ph,kind,pre){
+  openSheet(head(title)+'<p class="small muted" style="margin-top:0">Выбери причину или напиши свою. Её увидит мастер, без причины отправить нельзя.</p>'
+   +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">'+(REASONS[kind]||[]).map(r=>'<button class="chip" data-act="admReason" data-v="'+esc(r)+'">'+esc(r)+'</button>').join('')+'</div>'
+   +'<label class="field"><span>Причина</span><textarea id="aNote" maxlength="300" placeholder="'+esc(ph||'')+'">'+esc(pre||'')+'</textarea></label><button class="btn pri wide" data-act="'+act+'" data-id="'+esc(id)+'">Подтвердить</button>');
+}
+const needNote=()=>{const v=($('#aNote').value||'').trim();if(!v){toast('Укажи причину');$('#aNote').focus()}return v};
+function flagReason(p){const f=(p.flags||[]);return f.some(x=>/нет фото/.test(x))?'Нет фото готового изделия':f.some(x=>/оружие|вещества|взрослый|документы/.test(x))?'Запрещённый товар':f.some(x=>/бренд/.test(x))?'Чужая модель или бренд без лицензии':f.some(x=>/описание/.test(x))?'Неполное описание: размер, материал, срок':f.some(x=>/цена/.test(x))?'Цена указана неверно':''}
+function admPromo(id){
+  const p=ADM.products.find(x=>x.id===id);if(!p)return;
+  openSheet(head('Продвижение: '+esc(p.title))
+   +'<p class="small muted" style="margin-top:0">Карточка будет выше в каталоге с пометкой «Продвигается». Включай после оплаты продвижения или по тарифу «Про».</p>'
+   +'<label class="field"><span>Продвигать до</span><input class="input" id="aPromo" type="date" value="'+esc(p.promoUntil&&p.promoUntil>=TODAY?p.promoUntil:addDays(7))+'"></label>'
+   +'<div class="two"><button class="btn" data-act="admPromoSave" data-id="'+esc(id)+'" data-off="1">Выключить</button><button class="btn pri" data-act="admPromoSave" data-id="'+esc(id)+'">Сохранить</button></div>');
+}
+function admMaster(id){
+  const m=ADM.masters.find(x=>x.id===id);if(!m)return;
+  openSheet(head(esc(m.name))
+   +planFields(m.plan||'free',m.planUntil||'',m.gift)
+   +'<div class="row" style="gap:6px;flex-wrap:wrap;margin:-4px 0 12px"><button class="btn sm" data-act="admExtend" data-n="30">+1 месяц</button><button class="btn sm" data-act="admExtend" data-n="91">+3 месяца</button></div>'
+   +'<label class="check"><input type="checkbox" id="aVer"'+(m.verified?' checked':'')+'><span>Документы проверены (бейдж)</span></label>'
+   +'<label class="field"><span>Отвечает покупателям примерно за, часов</span><input class="input" id="aResp" type="number" inputmode="numeric" min="0" step="1" value="'+(m.responseHours==null?24:m.responseHours)+'"></label>'
+   +'<label class="field"><span>Заметка для себя</span><textarea id="aNoteM" maxlength="500">'+esc(m.adminNote||'')+'</textarea></label>'
+   +(m.blocked?'<div class="card pad" style="margin-bottom:12px"><b style="color:var(--accent)">Заблокирован</b>'+(m.blockReason?'<div class="small">Причина: '+esc(m.blockReason)+'</div>':'')+'<button class="btn sm" data-act="admUnblock" data-id="'+esc(id)+'" style="margin-top:8px">Разблокировать</button></div>':'<button class="btn wide" data-act="admBlock" data-id="'+esc(id)+'" style="margin-bottom:12px;color:var(--accent)">Заблокировать мастера</button>')
+   +'<button class="btn pri wide" data-act="admMasterSave" data-id="'+esc(id)+'">Сохранить</button>');
+}
+
+const EXT={
+  openAdmin:()=>openAdmin(),
+  openCab:()=>openCab(),
+  admReload:()=>admLoad(),
+  admTab:el=>{ADMT=el.dataset.v;drawAdmin()},
+  admApprove:el=>admApprove(el.dataset.id),
+  admApproveYes:el=>admDo('decideApp',{id:el.dataset.id,ok:true,plan:$('#aPlan').value,planUntil:$('#aUntil').value,gift:$('#aGift').checked,verified:$('#aVer').checked},el,'Мастер одобрен'),
+  admReject:el=>admNote('Отклонить анкету','admRejectYes',el.dataset.id,'Например, не подтверждён статус самозанятого','app'),
+  admRejectYes:el=>{const n=needNote();if(n)return admDo('decideApp',{id:el.dataset.id,ok:false,note:n},el,'Анкета отклонена, мастеру отправлена причина')},
+  admReason:el=>{const t=$('#aNote');const v=el.dataset.v;if(t.value.indexOf(v)<0)t.value=(t.value.trim()?t.value.trim()+'. ':'')+v;el.setAttribute('aria-pressed','true')},
+  admBlock:el=>admNote('Заблокировать мастера','admBlockYes',el.dataset.id,'Например, продаёт детали оружия','block'),
+  admBlockYes:el=>{const n=needNote();if(n)return admDo('setMaster',{id:el.dataset.id,blocked:true,blockReason:n},el,'Мастер заблокирован, карточки скрыты')},
+  admUnblock:el=>admDo('setMaster',{id:el.dataset.id,blocked:false},el,'Мастер разблокирован'),
+  admCard:el=>admDo('moderateProduct',{id:el.dataset.id,status:el.dataset.v,note:''},el,'Карточка опубликована'),
+  admCardNo:el=>{const p=ADM.products.find(x=>x.id===el.dataset.id)||{};admNote('Карточка не проходит','admCardNoYes',el.dataset.id,'Например, нужно фото готового изделия','card',flagReason(p))},
+  admCardNoYes:el=>{const n=needNote();if(n)return admDo('moderateProduct',{id:el.dataset.id,status:'rejected',note:n},el,'Карточка отклонена, мастеру отправлена причина')},
+  admPromo:el=>admPromo(el.dataset.id),
+  admPromoSave:el=>admDo('moderateProduct',{id:el.dataset.id,promoUntil:el.dataset.off?'':$('#aPromo').value},el,el.dataset.off?'Продвижение выключено':'Продвижение включено'),
+  admMaster:el=>admMaster(el.dataset.id),
+  admExtend:el=>{const u=$('#aUntil'),base=u.value&&u.value>TODAY?u.value:TODAY;u.value=addDays(+el.dataset.n,base);if($('#aPlan').value==='free')$('#aPlan').value='master'},
+  admMasterSave:el=>admDo('setMaster',{id:el.dataset.id,plan:$('#aPlan').value,planUntil:$('#aUntil').value,gift:$('#aGift').checked,verified:$('#aVer').checked,responseHours:+$('#aResp').value||0,note:$('#aNoteM').value},el,'Сохранено'),
+  admReview:el=>admDo('moderateReview',{id:el.dataset.id,ok:el.dataset.v==='1'},el,el.dataset.v==='1'?'Отзыв опубликован':'Отзыв скрыт'),
+  admReport:el=>admDo('resolveReport',{id:el.dataset.id,resolution:el.dataset.v},el,'Жалоба закрыта'),
+  cabEdit:el=>cabEdit(el.dataset.id),
+  cabSave:el=>cabSave(el),
+  cabDel:el=>cabDel(el.dataset.id,el),
+  cabProfile:()=>cabProfile(),
+  cabProfileSave:el=>cabProfileSave(el),
+  eType:el=>{EDIT.type=el.dataset.v;document.querySelectorAll('#eType button').forEach(b=>b.setAttribute('aria-pressed',b===el));const u=$('#eUnit');if(u&&!u.value&&EDIT.type==='service')u.placeholder='за 100 г'},
+  ePhAdd:()=>$('#eFile').click(),
+  ePhDel:el=>{EDIT.imgs.splice(+el.dataset.i,1);drawEPh()},
+  gal:el=>{const i=$('#galMain');if(i)i.src=el.dataset.u},
+  sendReport:async el=>{
+    const p=PROD[el.dataset.id],t=($('#rpT').value||'').trim(),r=$('#rpR').value;busy(el,true);
+    try{await API.call('report',{kind:'product',ref:el.dataset.id,master:p?p.master:'',reason:r,text:t,author:buyerName()});closeSheet();toast('Жалоба отправлена, спасибо')}
+    catch(e){toast(e.message)}finally{busy(el,false)}
+  }
+};
+document.addEventListener('change',e=>{
+  if(e.target.id==='eFile'){uploadPhotos(e.target.files);e.target.value=''}
+  if(e.target.id==='admAuto'){API.call('settings',{autoApprove:e.target.checked}).then(()=>toast('Настройка сохранена')).catch(er=>toast(er.message))}
+});
+function openReportSheet(id){
+  const p=PROD[id];
+  openSheet(head('Жалоба на карточку')
+   +'<p class="small muted" style="margin-top:0">'+esc(p?p.title:'')+'</p>'
+   +'<label class="field"><span>Что не так</span><select id="rpR"><option>Запрещённый товар</option><option>Обман или подозрение на мошенничество</option><option>Чужие фото или модель</option><option>Неверная цена или описание</option><option>Другое</option></select></label>'
+   +'<label class="field"><span>Подробности</span><textarea id="rpT" maxlength="1000"></textarea></label>'
+   +'<button class="btn pri wide" data-act="sendReport" data-id="'+esc(id)+'">Отправить жалобу</button>');
+}
+
 /* ---------- запуск ---------- */
 (async function start(){
   $('#brand').textContent=CONFIG.brand;document.title=CONFIG.brand;
   $('#demoBar').hidden=!DEMO;
   $('#cMat').innerHTML='<option value="">Своя цена</option>'+Object.keys(CONFIG.materials).map(k=>'<option'+(k==='PLA'?' selected':'')+'>'+esc(k)+'</option>').join('');
   fillPrintSelects();bindLegal();drawHero();drawCatalog();drawCartCnt();setTab('catalog');
+  if(API.on())API.catalog();
   await B.init();
   if(B.ok){try{const u=await timeout(B.send('VKWebAppGetUserInfo'),4000);if(u&&u.id)S.user={id:u.id,name:((u.first_name||'')+' '+(u.last_name||'')).trim()||'Покупатель',photo:u.photo_100||'',city:u.city&&u.city.title||''}}catch(e){}}
   const d=await Store.get('acct');
   if(d){S.cart=d.cart&&typeof d.cart==='object'?d.cart:{};S.fav=Array.isArray(d.fav)?d.fav:[];S.orders=Array.isArray(d.orders)?d.orders.filter(o=>o&&o.no&&STATUS[o.status]&&Array.isArray(o.items)):[];S.consent=!!d.consent;S.onb=!!d.onb;S.name=d.name||''}
   drawCatalog();drawCartCnt();if(S.tab==='profile')drawProfile();
+  if(API.on()&&API.auth()){loadMe();API.fire('open')}
   if(!S.consent)showOnb();else handleHash();
 })();
 </script>
