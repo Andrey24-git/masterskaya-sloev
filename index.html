@@ -410,7 +410,9 @@ const CONFIG={
   // true: показывать демо-товары и баннер. Перед запуском поставь false и заполни masters и products своими данными.
   demo:false,
   // Акция для первых продавцов (пустая строка — не показывать)
-  launchPromo:'Первым 20 мастерам — тариф «Про» бесплатно 3 месяца',
+  launchPromo:'Первым 20 мастерам — тариф «Про» бесплатно 1 месяц',
+  // Срок бесплатного «Про» по акции (дней) и сколько мастеров его получат
+  promoDays:30,promoCount:20,
   // Средняя скорость печати, г/ч (для оценки времени в заказе печати)
   printSpeed:12,
   // Материалы: цена за грамм по умолчанию и плотность (для оценки веса по STL)
@@ -507,7 +509,7 @@ let MAST={},PRODUCTS=[],PROD={};
 const DEMO=!!CONFIG.demo;
 const PLAN={};(CONFIG.plans||[]).forEach(p=>PLAN[p.id]=p);
 /* ---------- конструктор: настройки, которые владелец меняет в админке без кода ---------- */
-const SITE_DEF=JSON.parse(JSON.stringify({heroTitle:$('#heroTitle').textContent,heroText:$('#heroText').textContent,notice:'',launchPromo:CONFIG.launchPromo||'',
+const SITE_DEF=JSON.parse(JSON.stringify({heroTitle:$('#heroTitle').textContent,heroText:$('#heroText').textContent,notice:'',launchPromo:CONFIG.launchPromo||'',promoDays:CONFIG.promoDays,promoCount:CONFIG.promoCount,
   plans:CONFIG.plans||[],partner:CONFIG.partner||[],boards:CONFIG.boards||[],tips:TIPS,materials:Object.fromEntries(Object.entries(CONFIG.materials).map(([k,v])=>[k,{price:v.price}]))}));
 let SITE={};
 function siteVal(k){return SITE&&SITE[k]!=null?SITE[k]:SITE_DEF[k]}
@@ -515,7 +517,7 @@ function applySite(s){
   SITE=s&&typeof s==='object'?s:{};
   $('#heroTitle').textContent=siteVal('heroTitle');$('#heroText').textContent=siteVal('heroText');
   const n=siteVal('notice');$('#notice').textContent=n;$('#notice').hidden=!n;
-  CONFIG.launchPromo=siteVal('launchPromo');
+  CONFIG.launchPromo=siteVal('launchPromo');CONFIG.promoDays=siteVal('promoDays');CONFIG.promoCount=siteVal('promoCount');
   CONFIG.plans=SITE_DEF.plans.map(d=>Object.assign({},d,(SITE.plans||[]).find(x=>x.id===d.id)||{}));
   Object.keys(PLAN).forEach(k=>delete PLAN[k]);CONFIG.plans.forEach(p=>PLAN[p.id]=p);
   CONFIG.partner=siteVal('partner');CONFIG.boards=siteVal('boards');
@@ -1445,7 +1447,7 @@ function drawAdmin(){
 }
 let TGL=null,SD=null;
 function siteCollect(){if(!SD||!$('#sHT'))return;const v=id=>{const e=$('#'+id);return e?e.value.trim():''};
-  SD.heroTitle=v('sHT');SD.heroText=v('sHX');SD.notice=v('sNT');SD.launchPromo=v('sLP');
+  SD.heroTitle=v('sHT');SD.heroText=v('sHX');SD.notice=v('sNT');SD.launchPromo=v('sLP');SD.promoDays=Math.min(365,Math.max(1,parseInt(v('sPD'))||30));SD.promoCount=Math.max(0,parseInt(v('sPC'))||0);
   SD.plans.forEach((p,i)=>{p.name=v('sPn'+i)||p.name;if($('#sPp'+i))p.price=Math.max(0,+v('sPp'+i)||0);p.limit=Math.max(0,parseInt(v('sPl'+i))||0);p.hit=$('#sPh'+i).checked;p.perks=v('sPk'+i).split('\n').map(s=>s.trim()).filter(Boolean)});
   SD.partner.forEach((x,i)=>{x.ico=v('sAi'+i);x.name=v('sAn'+i);x.price=v('sAp'+i);x.text=v('sAt'+i)});
   SD.boards.forEach((x,i)=>{x.title=v('sBt'+i);x.url=v('sBu'+i)});
@@ -1574,14 +1576,14 @@ const ADMV={
   },
   settingsBlock(){return '<h2 class="sec">Проверка карточек</h2><div class="card pad small">Каждая новая карточка и каждое изменение в ней проходят проверку модератора. Без проверки сразу сохраняются только мелкие правки: цена (если меняется не больше чем вдвое), срок изготовления и «за что цена». Пока изменения на проверке, в каталоге видна прежняя версия карточки.</div>'},
   site(){
-    if(!SD)SD=JSON.parse(JSON.stringify({heroTitle:siteVal('heroTitle'),heroText:siteVal('heroText'),notice:siteVal('notice'),launchPromo:siteVal('launchPromo'),plans:CONFIG.plans,partner:siteVal('partner'),boards:siteVal('boards'),tips:siteVal('tips'),materials:siteVal('materials')}));
+    if(!SD)SD=JSON.parse(JSON.stringify({heroTitle:siteVal('heroTitle'),heroText:siteVal('heroText'),notice:siteVal('notice'),launchPromo:siteVal('launchPromo'),promoDays:siteVal('promoDays'),promoCount:siteVal('promoCount'),plans:CONFIG.plans,partner:siteVal('partner'),boards:siteVal('boards'),tips:siteVal('tips'),materials:siteVal('materials')}));
     const inp=(id,label,v,max,ph)=>'<label class="field"><span>'+label+'</span><input class="input" id="'+id+'" maxlength="'+max+'" value="'+esc(v)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+'></label>';
     const area=(id,label,v,max,ph)=>'<label class="field"><span>'+label+'</span><textarea id="'+id+'" maxlength="'+max+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+'>'+esc(v)+'</textarea></label>';
     const tools=(k,i,n)=>'<div class="sbtn">'+(i>0?'<button class="btn sm" data-act="siteMove" data-k="'+k+'" data-i="'+i+'" data-d="-1" aria-label="Выше">↑</button>':'')+(i<n-1?'<button class="btn sm" data-act="siteMove" data-k="'+k+'" data-i="'+i+'" data-d="1" aria-label="Ниже">↓</button>':'')+'<button class="btn sm" data-act="siteDel" data-k="'+k+'" data-i="'+i+'">Удалить</button></div>';
     const sec=(t,hint,body)=>'<h2 class="sec">'+t+'</h2>'+(hint?'<p class="small muted" style="margin:-4px 2px 8px">'+hint+'</p>':'')+'<div class="card pad">'+body+'</div>';
     let h='<p class="small muted" style="margin-top:0">Здесь можно менять тексты и цены без кода. Изменения видят все, как только нажмёте «Сохранить». Эта вкладка видна только вам.</p>';
     h+=sec('Каталог','Шапка на главной и объявление под ней. Пустое объявление не показывается.',inp('sHT','Заголовок',SD.heroTitle,80)+area('sHX','Текст под заголовком',SD.heroText,300)+inp('sNT','Объявление',SD.notice,200,'Например: до 1 ноября скидка 10% у всех мастеров'));
-    h+=sec('Акция для мастеров','Показывается в каталоге и в анкете мастера. Оставьте пустым, чтобы убрать.',inp('sLP','Текст акции',SD.launchPromo,120));
+    h+=sec('Акция для мастеров','Текст показывается в каталоге и в анкете мастера, пустой текст убирает акцию. Срок и число мастеров действуют при одобрении анкеты; если меняете их, поправьте и текст.',inp('sLP','Текст акции',SD.launchPromo,120)+'<div class="two"><label class="field"><span>Срок «Про», дней</span><input class="input" type="number" min="1" max="365" id="sPD" value="'+esc(SD.promoDays)+'"></label><label class="field"><span>Сколько мастеров</span><input class="input" type="number" min="0" id="sPC" value="'+esc(SD.promoCount)+'"></label></div>');
     h+=sec('Тарифы','Лимит — сколько карточек мастера видно в каталоге, 0 — без ограничения. Преимущества — каждое с новой строки.',SD.plans.map((p,i)=>'<div class="srow"><b>«'+esc(p.name)+'»</b><div class="two" style="margin-top:6px">'+inp('sPn'+i,'Название',p.name,20)+(p.id==='free'?'<label class="field"><span>Цена</span><input class="input" value="Бесплатно" disabled></label>':'<label class="field"><span>Цена за 30 дней, ₽</span><input class="input" type="number" min="0" id="sPp'+i+'" value="'+esc(p.price)+'"></label>')+'</div>'
       +'<div class="two"><label class="field"><span>Лимит карточек</span><input class="input" type="number" min="0" id="sPl'+i+'" value="'+esc(p.limit)+'"></label><label class="check" style="align-self:end;margin-bottom:12px"><input type="checkbox" id="sPh'+i+'"'+(p.hit?' checked':'')+'><span>Пометка «Выгодно»</span></label></div>'
       +area('sPk'+i,'Преимущества',(p.perks||[]).join('\n'),1000)+'</div>').join(''));
@@ -1646,10 +1648,10 @@ function planFields(plan,until,gift){
 }
 function admApprove(id){
   const a=ADM.apps.find(x=>x.id===id);if(!a)return;
-  const promo=!!CONFIG.launchPromo&&ADM.masters.filter(m=>m.gift).length<20;
+  const promo=!!CONFIG.launchPromo&&ADM.masters.filter(m=>m.gift).length<CONFIG.promoCount;
   openSheet(head('Одобрить: '+esc(a.name))
    +'<p class="small muted" style="margin-top:0">Перед одобрением проверь статус мастера: скриншот из «Мой налог» или выписку ИП он присылает в сообщения сообщества.</p>'
-   +(can('platform.plans')?planFields(promo?'pro':'free',promo?addDays(91):'',promo)
+   +(can('platform.plans')?planFields(promo?'pro':'free',promo?addDays(CONFIG.promoDays):'',promo)
      +(promo?'<p class="small muted" style="margin-top:-6px">Подставлена акция: «'+esc(CONFIG.launchPromo)+'».</p>':'')
      +'<label class="check"><input type="checkbox" id="aVer"><span>Документы проверены (бейдж)</span></label>'
     :(promo&&can('sellers.promo')?'<label class="check"><input type="checkbox" id="aGift" checked><span>'+esc(CONFIG.launchPromo)+'</span></label>':'<p class="small muted">Мастер начнёт с тарифа «Старт». Тарифы и бейджи подключает тот, у кого есть это право.</p>'))
