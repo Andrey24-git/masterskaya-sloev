@@ -172,6 +172,11 @@ h1,h2,h3,.logo,.big,.price,.shhead h2,h2.sec,.slide h2{font-family:var(--f-head)
 .chip{background:transparent;border-radius:8px;color:var(--muted)}
 .chip[aria-pressed="true"]{background:transparent;color:var(--teal);border-color:var(--teal)}
 .tabbar{background:#16191D}
+.notice{margin-top:12px;padding:9px 12px;border-radius:10px;background:rgba(0,0,0,.35);border:1px solid var(--accent);color:var(--ink);font-size:14px;font-weight:600}
+.sitebar{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:5;margin-top:14px;padding:10px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.35)}
+.srow{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.srow:first-child{border-top:0;padding-top:0;margin-top:0}
+.sbtn{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}.sbtn .btn{min-width:40px}
+.where .kv{display:block}.where .kv span{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}.where .kv b{display:block;text-align:left;font-weight:500;overflow-wrap:anywhere}
 .pico{width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:var(--bg3);display:grid;place-items:center;font-size:19px}
 .partner-top{background:linear-gradient(135deg,var(--accent2),var(--bg2) 70%);border-color:#4A3D24}
 .plan.hit{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
@@ -204,6 +209,7 @@ h1,h2,h3,.logo,.big,.price,.shhead h2,h2.sec,.slide h2{font-family:var(--f-head)
   <div class="hero">
     <h1 id="heroTitle">3D-печать от мастеров со всей России</h1>
     <p id="heroText">Площадка, где мастера 3D-печати размещают изделия и услуги. Мастера сами отправляют заказы по всей России, заказ и оплата напрямую мастеру.</p>
+    <div class="notice" id="notice" hidden></div>
     <div class="stats" id="heroStats"></div>
   </div>
   <label class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Подставка, миниатюры, PETG…" aria-label="Поиск по каталогу" enterkeyhint="search"></label>
@@ -500,6 +506,23 @@ if(!CONFIG.demo){CONFIG.masters=CONFIG.masters.filter(m=>m.real);CONFIG.products
 let MAST={},PRODUCTS=[],PROD={};
 const DEMO=!!CONFIG.demo;
 const PLAN={};(CONFIG.plans||[]).forEach(p=>PLAN[p.id]=p);
+/* ---------- конструктор: настройки, которые владелец меняет в админке без кода ---------- */
+const SITE_DEF=JSON.parse(JSON.stringify({heroTitle:$('#heroTitle').textContent,heroText:$('#heroText').textContent,notice:'',launchPromo:CONFIG.launchPromo||'',
+  plans:CONFIG.plans||[],partner:CONFIG.partner||[],boards:CONFIG.boards||[],tips:TIPS,materials:Object.fromEntries(Object.entries(CONFIG.materials).map(([k,v])=>[k,{price:v.price}]))}));
+let SITE={};
+function siteVal(k){return SITE&&SITE[k]!=null?SITE[k]:SITE_DEF[k]}
+function applySite(s){
+  SITE=s&&typeof s==='object'?s:{};
+  $('#heroTitle').textContent=siteVal('heroTitle');$('#heroText').textContent=siteVal('heroText');
+  const n=siteVal('notice');$('#notice').textContent=n;$('#notice').hidden=!n;
+  CONFIG.launchPromo=siteVal('launchPromo');
+  CONFIG.plans=SITE_DEF.plans.map(d=>Object.assign({},d,(SITE.plans||[]).find(x=>x.id===d.id)||{}));
+  Object.keys(PLAN).forEach(k=>delete PLAN[k]);CONFIG.plans.forEach(p=>PLAN[p.id]=p);
+  CONFIG.partner=siteVal('partner');CONFIG.boards=siteVal('boards');
+  TIPS.length=0;siteVal('tips').forEach(x=>TIPS.push(x));
+  const M=siteVal('materials');Object.keys(CONFIG.materials).forEach(k=>{CONFIG.materials[k].price=(M[k]||SITE_DEF.materials[k]||{}).price||CONFIG.materials[k].price});
+  if(S.tab==='community')drawCommunity();
+}
 const planOf=m=>PLAN[m&&m.plan]||(CONFIG.plans||[])[0]||{id:'free',name:'Старт',limit:0};
 const TODAY=new Date().toISOString().slice(0,10);
 const isPromo=p=>!!(p.promoUntil&&p.promoUntil>=TODAY);
@@ -1164,6 +1187,7 @@ const API={
 let ME=null;
 function applyCatalog(d){
   if(!d||!Array.isArray(d.masters))return;
+  if(d.site)applySite(d.site);
   CONFIG.masters=d.masters;CONFIG.products=Array.isArray(d.products)?d.products:[];CONFIG.reviews=Array.isArray(d.reviews)?d.reviews:[];
   rebuild();const pre=$('#pMaster').value;fillPrintSelects(pre);drawHero();drawCatalog();drawCartCnt();
   if(S.tab==='profile')drawProfile();
@@ -1407,7 +1431,7 @@ const byLine=(verb,uid,at)=>uid?'<div class="small muted" style="margin-top:4px"
 // вкладки админки и права, при которых они видны ('owner' — только владелец)
 const ADM_GROUPS=[['Продавцы',[['apps','Анкеты',['sellers.apps']],['cards','Карточки и фото',['sellers.cards','platform.promo']],['masters','Мастера',['sellers.block','platform.plans']]]],
   ['Покупатели',[['buyers','Аккаунты',['buyers.view','buyers.block']],['reviews','Отзывы',['buyers.reviews']],['reports','Жалобы',['buyers.reports']]]],
-  ['Площадка',[['money','Доход',['platform.money','platform.settings']],['demand','Спрос',['platform.money']],['team','Команда','owner'],['log','Журнал',['platform.log']]]]];
+  ['Площадка',[['money','Доход',['platform.money','platform.settings']],['demand','Спрос',['platform.money']],['team','Команда','owner'],['site','Конструктор','owner'],['log','Журнал',['platform.log']]]]];
 const tabOk=t=>t[2]==='owner'?isAdm():canAny(...t[2]);
 function admAllowed(){return ADM_GROUPS.flatMap(g=>g[1].filter(tabOk).map(t=>t[0]))}
 function drawAdmin(){
@@ -1419,7 +1443,15 @@ function drawAdmin(){
   $('#admBody').innerHTML=ADMV[ADMT]();
   if(ADMT==='money'&&isAdm())drawTg();
 }
-let TGL=null;
+let TGL=null,SD=null;
+function siteCollect(){if(!SD||!$('#sHT'))return;const v=id=>{const e=$('#'+id);return e?e.value.trim():''};
+  SD.heroTitle=v('sHT');SD.heroText=v('sHX');SD.notice=v('sNT');SD.launchPromo=v('sLP');
+  SD.plans.forEach((p,i)=>{p.name=v('sPn'+i)||p.name;if($('#sPp'+i))p.price=Math.max(0,+v('sPp'+i)||0);p.limit=Math.max(0,parseInt(v('sPl'+i))||0);p.hit=$('#sPh'+i).checked;p.perks=v('sPk'+i).split('\n').map(s=>s.trim()).filter(Boolean)});
+  SD.partner.forEach((x,i)=>{x.ico=v('sAi'+i);x.name=v('sAn'+i);x.price=v('sAp'+i);x.text=v('sAt'+i)});
+  SD.boards.forEach((x,i)=>{x.title=v('sBt'+i);x.url=v('sBu'+i)});
+  SD.tips.forEach((x,i)=>{x[0]=v('sTt'+i);x[1]=v('sTx'+i)});
+  Object.keys(SD.materials).forEach(k=>{const e=document.getElementById('sM_'+k);if(e)SD.materials[k].price=Math.max(0,+e.value||0)});
+}
 async function drawTg(){
   const box=$('#tgBox');if(!box)return;
   let st;try{st=await API.call('tgStatus')}catch(e){box.innerHTML='<b>Уведомления в Telegram</b><p class="small">'+esc(e.message)+'</p>';return}
@@ -1541,6 +1573,41 @@ const ADMV={
     return '<p class="small muted" style="margin-top:0">Последние 200 действий: кто, что и когда сделал.</p><div class="card pad">'+L.map(l=>'<div class="kv" style="align-items:flex-start"><span>'+esc(when(l.t))+'<br><span class="muted">'+esc(whoName(l.uid))+'</span></span><b style="text-align:right;font-weight:500">'+esc(ACT[l.act]||l.act)+' '+esc(l.target)+(l.note?'<br><span class="small muted">'+esc(l.note)+'</span>':'')+'</b></div>').join('')+'</div>';
   },
   settingsBlock(){return '<h2 class="sec">Проверка карточек</h2><div class="card pad small">Каждая новая карточка и каждое изменение в ней проходят проверку модератора. Без проверки сразу сохраняются только мелкие правки: цена (если меняется не больше чем вдвое), срок изготовления и «за что цена». Пока изменения на проверке, в каталоге видна прежняя версия карточки.</div>'},
+  site(){
+    if(!SD)SD=JSON.parse(JSON.stringify({heroTitle:siteVal('heroTitle'),heroText:siteVal('heroText'),notice:siteVal('notice'),launchPromo:siteVal('launchPromo'),plans:CONFIG.plans,partner:siteVal('partner'),boards:siteVal('boards'),tips:siteVal('tips'),materials:siteVal('materials')}));
+    const inp=(id,label,v,max,ph)=>'<label class="field"><span>'+label+'</span><input class="input" id="'+id+'" maxlength="'+max+'" value="'+esc(v)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+'></label>';
+    const area=(id,label,v,max,ph)=>'<label class="field"><span>'+label+'</span><textarea id="'+id+'" maxlength="'+max+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+'>'+esc(v)+'</textarea></label>';
+    const tools=(k,i,n)=>'<div class="sbtn">'+(i>0?'<button class="btn sm" data-act="siteMove" data-k="'+k+'" data-i="'+i+'" data-d="-1" aria-label="Выше">↑</button>':'')+(i<n-1?'<button class="btn sm" data-act="siteMove" data-k="'+k+'" data-i="'+i+'" data-d="1" aria-label="Ниже">↓</button>':'')+'<button class="btn sm" data-act="siteDel" data-k="'+k+'" data-i="'+i+'">Удалить</button></div>';
+    const sec=(t,hint,body)=>'<h2 class="sec">'+t+'</h2>'+(hint?'<p class="small muted" style="margin:-4px 2px 8px">'+hint+'</p>':'')+'<div class="card pad">'+body+'</div>';
+    let h='<p class="small muted" style="margin-top:0">Здесь можно менять тексты и цены без кода. Изменения видят все, как только нажмёте «Сохранить». Эта вкладка видна только вам.</p>';
+    h+=sec('Каталог','Шапка на главной и объявление под ней. Пустое объявление не показывается.',inp('sHT','Заголовок',SD.heroTitle,80)+area('sHX','Текст под заголовком',SD.heroText,300)+inp('sNT','Объявление',SD.notice,200,'Например: до 1 ноября скидка 10% у всех мастеров'));
+    h+=sec('Акция для мастеров','Показывается в каталоге и в анкете мастера. Оставьте пустым, чтобы убрать.',inp('sLP','Текст акции',SD.launchPromo,120));
+    h+=sec('Тарифы','Лимит — сколько карточек мастера видно в каталоге, 0 — без ограничения. Преимущества — каждое с новой строки.',SD.plans.map((p,i)=>'<div class="srow"><b>«'+esc(p.name)+'»</b><div class="two" style="margin-top:6px">'+inp('sPn'+i,'Название',p.name,20)+(p.id==='free'?'<label class="field"><span>Цена</span><input class="input" value="Бесплатно" disabled></label>':'<label class="field"><span>Цена за 30 дней, ₽</span><input class="input" type="number" min="0" id="sPp'+i+'" value="'+esc(p.price)+'"></label>')+'</div>'
+      +'<div class="two"><label class="field"><span>Лимит карточек</span><input class="input" type="number" min="0" id="sPl'+i+'" value="'+esc(p.limit)+'"></label><label class="check" style="align-self:end;margin-bottom:12px"><input type="checkbox" id="sPh'+i+'"'+(p.hit?' checked':'')+'><span>Пометка «Выгодно»</span></label></div>'
+      +area('sPk'+i,'Преимущества',(p.perks||[]).join('\n'),1000)+'</div>').join(''));
+    h+=sec('Реклама и сотрудничество','Форматы во вкладке «Сообщество». Цену можно писать словами: «от 900 ₽», «по договорённости» или оставить пустой.',SD.partner.map((x,i,a)=>'<div class="srow"><div class="two">'+inp('sAi'+i,'Значок',x.ico,4,'📣')+inp('sAn'+i,'Название',x.name,40)+'</div>'+inp('sAp'+i,'Цена',x.price,30)+area('sAt'+i,'Описание',x.text,240)+tools('partner',i,a.length)+'</div>').join('')+'<button class="btn wide" data-act="siteAdd" data-k="partner" style="margin-top:10px">+ Добавить формат</button>');
+    h+=sec('Обсуждения','Ссылки на темы сообщества ВКонтакте, вида https://vk.ru/topic-…',SD.boards.map((x,i,a)=>'<div class="srow">'+inp('sBt'+i,'Название',x.title,60)+inp('sBu'+i,'Ссылка',x.url,200,'https://vk.ru/topic-…')+tools('boards',i,a.length)+'</div>').join('')+'<button class="btn wide" data-act="siteAdd" data-k="boards" style="margin-top:10px">+ Добавить обсуждение</button>');
+    h+=sec('Советы','Карточки с советами во вкладке «Сообщество».',SD.tips.map((x,i,a)=>'<div class="srow">'+inp('sTt'+i,'Заголовок',x[0],60)+area('sTx'+i,'Текст',x[1],300)+tools('tips',i,a.length)+'</div>').join('')+'<button class="btn wide" data-act="siteAdd" data-k="tips" style="margin-top:10px">+ Добавить совет</button>');
+    h+=sec('Материалы','Цена за грамм по умолчанию в расчёте стоимости. Мастера могут ставить свои цены.',Object.keys(SD.materials).map(k=>'<label class="field"><span>'+esc(k)+', ₽ за грамм</span><input class="input" type="number" min="0" step="0.1" id="sM_'+esc(k)+'" value="'+esc(SD.materials[k].price)+'"></label>').join(''));
+    h+='<div class="sitebar"><button class="btn pri wide" data-act="siteSave">Сохранить изменения</button><button class="btn sm wide" data-act="siteUndo" style="margin-top:8px">Отменить несохранённое</button></div>';
+    h+=ADMV.whereBlock();
+    h+='<h2 class="sec">Сброс</h2><div class="card pad small">Вернёт все тексты и цены к тем, что были заложены в приложение изначально.<button class="btn sm" data-act="siteReset" style="margin-top:8px;display:block">Вернуть всё как было</button></div>';
+    return h;
+  },
+  whereBlock(){const w=ADM.where||{},fn=w.fn||'',fo=w.folder||'',con='https://console.yandex.cloud/folders/'+fo;
+    const row=(k,v,link)=>'<div class="kv"><span>'+k+'</span><b>'+(link?'<a href="'+esc(link)+'" target="_blank" rel="noopener">'+esc(v)+'</a>':esc(v))+'</b></div>';
+    return '<h2 class="sec">Где лежит код</h2><p class="small muted" style="margin:-4px 2px 8px">Открывается только под вашими входами. Ключи и пароли здесь не показываются.</p><div class="card pad where small">'
+      +row('Приложение (страницы)','GitHub: andrey24-git/masterskaya-sloev','https://github.com/andrey24-git/masterskaya-sloev')
+      +row('Главный файл приложения','index.html','https://github.com/andrey24-git/masterskaya-sloev/blob/main/index.html')
+      +row('Документы (оферта, правила)','legal.html','https://github.com/andrey24-git/masterskaya-sloev/blob/main/legal.html')
+      +row('Адрес приложения','andrey24-git.github.io/masterskaya-sloev','https://andrey24-git.github.io/masterskaya-sloev/')
+      +row('Сервер','Yandex Cloud → Cloud Functions → sloi-api (index.js, store.js)',fo&&fn?con+'/functions/functions/'+fn+'/overview':'')
+      +row('База данных',(w.data||'бакет данных')+': db.json — все данные, backup/ — копия за каждый день',fo&&w.data?con+'/storage/buckets/'+w.data:'')
+      +row('Фото товаров',w.media||'бакет фото',fo&&w.media?con+'/storage/buckets/'+w.media:'')
+      +row('Ключи','В настройках функции sloi-api, раздел «Переменные окружения». Ключ ВК: '+(w.vk?'задан':'не задан')+', Telegram: '+(w.tg?'задан':'не задан'))
+      +row('Приложение ВКонтакте','dev.vk.ru → «Мои приложения», ID '+(w.app||'54828482'))
+      +row('Запасная копия кода','Архивы sloy-server.zip и sloy-vk-app.zip в чате с Claude')
+      +'</div>'},
   partnersBlock(){const L=ADM.partners||[],K={ad:'Реклама',review:'Тест и обзор',contest:'Конкурс',bulk:'Партия или мерч',partner:'Партнёрство',other:'Другое'};
     return '<h2 class="sec">Заявки на рекламу и сотрудничество</h2>'+(L.length?L.slice(0,50).map(r=>'<div class="card pad" style="margin-bottom:10px'+(r.state==='done'?';opacity:.6':'')+'"><div class="row between" style="gap:6px;flex-wrap:wrap"><b>'+esc(K[r.kind]||r.kind)+' · '+esc(r.name)+'</b><span class="small muted">'+esc(when(r.created))+'</span></div>'
       +'<p class="small" style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.text)+'</p>'+(r.budget?'<div class="small muted" style="margin-top:4px">Бюджет: '+esc(r.budget)+'</div>':'')+(r.contact?'<div class="small muted">Связь: '+esc(r.contact)+'</div>':'')
@@ -1641,7 +1708,13 @@ const EXT={
   openAdmin:()=>openAdmin(),
   openCab:()=>openCab(),
   admReload:()=>admLoad(),
-  admTab:el=>{ADMT=el.dataset.v;drawAdmin()},
+  admTab:el=>{if(el.dataset.v!=='site')SD=null;ADMT=el.dataset.v;drawAdmin()},
+  siteAdd:el=>{siteCollect();const k=el.dataset.k;SD[k].push(k==='partner'?{id:'',ico:'✨',name:'',price:'',text:''}:k==='boards'?{title:'',url:''}:['','']);drawAdmin()},
+  siteDel:el=>{siteCollect();SD[el.dataset.k].splice(+el.dataset.i,1);drawAdmin()},
+  siteMove:el=>{siteCollect();const L=SD[el.dataset.k],i=+el.dataset.i,j=i+(+el.dataset.d);[L[i],L[j]]=[L[j],L[i]];drawAdmin()},
+  siteUndo:()=>{SD=null;drawAdmin();toast('Вернул сохранённые значения')},
+  siteSave:async el=>{siteCollect();busy(el,true);try{const r=await API.call('saveSite',{site:SD});applySite(r.site);try{const c=JSON.parse(localStorage.getItem('sl_cat')||'null');if(c){c.site=r.site;localStorage.setItem('sl_cat',JSON.stringify(c))}}catch(e){}drawHero();SD=null;drawAdmin();toast('Сохранено. Изменения уже видят все')}catch(e){toast(e.message)}finally{busy(el,false)}},
+  siteReset:async el=>{if(el.dataset.sure!=='1'){el.dataset.sure='1';el.textContent='Точно вернуть? Нажмите ещё раз';return}busy(el,true);try{const r=await API.call('saveSite',{site:{}});applySite(r.site);drawHero();SD=null;drawAdmin();toast('Вернул как было')}catch(e){toast(e.message)}finally{busy(el,false)}},
   admPartner:el=>admDo('partnerDone',{id:el.dataset.id,state:el.dataset.v||'done'},el,el.dataset.v?'Вернули в новые':'Отмечено'),
   admApprove:el=>admApprove(el.dataset.id),
   admApproveYes:el=>admDo('decideApp',{id:el.dataset.id,ok:true,plan:$('#aPlan')?$('#aPlan').value:'',planUntil:$('#aUntil')?$('#aUntil').value:'',gift:!!($('#aGift')&&$('#aGift').checked),verified:!!($('#aVer')&&$('#aVer').checked)},el,'Мастер одобрен'),
