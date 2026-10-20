@@ -1606,7 +1606,7 @@ const ADMV={
       +row('Сервер','Yandex Cloud → Cloud Functions → sloi-api (index.js, store.js)',fo&&fn?con+'/functions/functions/'+fn+'/overview':'')
       +row('База данных',(w.data||'бакет данных')+': db.json — все данные, backup/ — копия за каждый день',fo&&w.data?con+'/storage/buckets/'+w.data:'')
       +row('Фото товаров',w.media||'бакет фото',fo&&w.media?con+'/storage/buckets/'+w.media:'')
-      +row('Ключи','В настройках функции sloi-api, раздел «Переменные окружения». Ключ ВК: '+(w.vk?'задан':'не задан')+', Telegram: '+(w.tg?'задан':'не задан'))
+      +row('Ключи','В настройках функции sloi-api, раздел «Переменные окружения». Ключ приложения ВК: '+(w.vk?'задан':'не задан')+', ключ сообщества для сообщений: '+(w.group?'задан':'не задан')+', Telegram-бот: '+(w.tg?'задан':'не задан'))
       +row('Приложение ВКонтакте','dev.vk.ru → «Мои приложения», ID '+(w.app||'54828482'))
       +row('Запасная копия кода','Архивы sloy-server.zip и sloy-vk-app.zip в чате с Claude')
       +'</div>'},
@@ -1620,7 +1620,7 @@ const ADMV={
     const soon=ADM.masters.filter(m=>m.effPlan!=='free'&&m.planUntil&&m.planUntil<=addDays(7)).sort((a,b)=>a.planUntil<b.planUntil?-1:1);
     const days=ADM.days.slice().reverse(),tot=k=>ADM.days.reduce((a,d)=>a+(d[k]||0),0);
     if(!can('platform.money'))return can('platform.settings')?ADMV.settingsBlock():'';
-    const dailyBtn=(isAdm()?'<div id="tgBox" class="card pad" style="margin-bottom:10px"><b>Уведомления в Telegram</b><p class="small muted" style="margin:4px 0 0">Загружаю…</p></div>':'')+(isAdm()?'<div class="card pad" style="margin-bottom:10px"><b>Утренняя сводка и напоминания</b><p class="small muted" style="margin:4px 0 8px">Каждое утро вам приходит сводка в сообщения ВК и в Telegram (если привязан), а мастерам — напоминание за 3 дня и в день окончания тарифа. Можно отправить сейчас.</p><button class="btn sm" data-act="admDaily">Отправить сейчас</button></div>':'');
+    const dailyBtn=(isAdm()?'<div id="tgBox" class="card pad" style="margin-bottom:10px"><b>Уведомления в Telegram</b><p class="small muted" style="margin:4px 0 0">Загружаю…</p></div>':'')+(isAdm()?'<div class="card pad" style="margin-bottom:10px"><b>Отчёты утром и вечером</b><p class="small muted" style="margin:4px 0 8px">В 9:00 — сводка за вчера: сколько людей смотрело, заказы, что ждёт проверки, а мастерам уходят напоминания о тарифе. В 21:00 — отчёт за сегодня. Приходят в Telegram (если привязан) и в сообщения ВК от сообщества (если задан ключ сообщества). Можно отправить сейчас.</p><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="admDaily">Утренний сейчас</button><button class="btn sm" data-act="admDaily" data-v="evening">Вечерний сейчас</button></div></div>':'');
     return dailyBtn+'<div class="card pad" style="margin-bottom:10px"><div class="small muted">Тарифы в месяц, без бесплатных по акции</div><div class="big">'+rub(sum)+'</div>'
       +(CONFIG.plans||[]).filter(p=>p.price).map(p=>'<div class="kv"><span>«'+esc(p.name)+'» по '+rub(p.price)+'</span><b>'+paid.filter(m=>m.effPlan===p.id).length+'</b></div>').join('')
       +'<div class="kv"><span>По акции бесплатно</span><b>'+gift.length+'</b></div><div class="kv"><span>На бесплатном «Старте»</span><b>'+ADM.masters.filter(m=>m.effPlan==='free').length+'</b></div>'
@@ -1762,7 +1762,7 @@ const EXT={
   tgCheck:async el=>{busy(el,true);try{const r=await API.call('tgCheck');if(r.linked){TGL=null;toast('Telegram привязан');drawTg()}else toast('Пока не вижу нажатия «Start». Откройте бота по ссылке и нажмите «Start», затем проверьте снова')}catch(e){toast(e.message)}finally{busy(el,false)}},
   tgUnlink:async el=>{if(el.dataset.sure!=='1'){el.dataset.sure='1';el.textContent='Точно?';return}busy(el,true);try{await API.call('tgUnlink',{id:el.dataset.id});toast('Отвязано');drawTg()}catch(e){toast(e.message)}finally{busy(el,false)}},
   tgTest:async el=>{busy(el,true);try{await API.call('tgTest');toast('Отправил проверочное сообщение в Telegram')}catch(e){toast(e.message)}finally{busy(el,false)}},
-  admDaily:async el=>{busy(el,true);try{const r=await API.call('dailyNow');toast('Сводка отправлена'+(r.reminders?', напоминаний: '+r.reminders:''))}catch(e){toast(e.message)}finally{busy(el,false)}},
+  admDaily:async el=>{busy(el,true);try{const r=await API.call('dailyNow',{kind:el.dataset.v||'morning'});toast('Сводка отправлена'+(r.reminders?', напоминаний: '+r.reminders:''))}catch(e){toast(e.message)}finally{busy(el,false)}},
   ldMode:el=>{document.querySelectorAll('#ldSeg button').forEach(b=>b.setAttribute('aria-pressed',b===el));const v=el.dataset.v;$('#ldDays').hidden=v!=='busy';$('#ldUntil').hidden=v!=='vacation';$('#ldNote').hidden=v!=='vacation'},
   ldSave:async el=>{const b=document.querySelector('#ldSeg button[aria-pressed="true"]'),mode=b?b.dataset.v:'open';busy(el,true);
     try{await API.call('setLoad',{mode,days:+$('#ldD').value||0,until:$('#ldU').value});toast(mode==='open'?'Принимаешь заказы':mode==='busy'?'Статус: очередь':'Отпуск включён, карточки скрыты');await loadMe();drawCab();API.catalog()}catch(e){toast(e.message)}finally{busy(el,false)}},
